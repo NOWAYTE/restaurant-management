@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_socketio import SocketIO
+from app.routes.orders import orders_bp
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -22,6 +23,6 @@ def create_app():
     # register routes
     from app.routes import reservations
     app.register_blueprint(reservations.bp)
-
+    app.register_blueprint(orders_bp, url_prefix="/api/orders")
     return app
 
