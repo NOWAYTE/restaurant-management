@@ -88,13 +88,13 @@ export default function Home() {
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-              </span>
-                  order.status === 'completed' 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {order.status}
-                </span>
+              <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+  order.status === 'completed' 
+    ? 'bg-green-100 text-green-800' 
+    : 'bg-yellow-100 text-yellow-800'
+}`}>
+  {order.status}
+</span>
               </div>
               <p className="text-sm text-gray-600">Customer: {order.customer_name}</p>
               <div className="mt-2">
