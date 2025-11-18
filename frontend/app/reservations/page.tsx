@@ -92,7 +92,7 @@ export default function ReservationsPage() {
     setSuccess(null);
     
     try {
-      await axios.post(`${API_URL}/reservations`, {
+      await axios.post(`${API_URL}/reservations/`, {
         ...form,
         party_size: Number(form.party_size),
       });
