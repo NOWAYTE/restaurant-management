@@ -60,38 +60,35 @@ export default function Home() {
   };
 
   if (isLoading) {
-    return <div className="text-center py-8">Loading...</div>;
+    return (
+      <div className="p-6">
+        <div className="h-12 bg-gray-100 rounded w-64 mb-8"></div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-4">
+            <div className="h-10 bg-gray-100 rounded w-48 mb-6"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="h-32 bg-gray-100 rounded-lg"></div>
+              ))}
+            </div>
+          </div>
+          <div className="h-96 bg-gray-100 rounded-lg"></div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Restaurant Management System</h1>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          <Menu 
-            menuItems={menuItems} 
-            onAddToOrder={handleAddToOrder} 
-          />
-        </div>
-        
-        <div>
-          <OrderSummary
-            items={orderItems}
-            onRemoveItem={handleRemoveItem}
-            onSubmitOrder={handleSubmitOrder}
-          />
-        </div>
-      </div>
-
-      <div className="mt-12">
-        <h2 className="text-2xl font-bold mb-4">Recent Orders</h2>
-        <div className="space-y-4">
-          {orders.map(order => (
-            <div key={order.id} className="border p-4 rounded-lg">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="font-semibold">Order #{order.id}</h3>
-                <span className={`px-2 py-1 text-sm rounded ${
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-gray-800">Restaurant Management</h1>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">
+                {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              </span>
                   order.status === 'completed' 
                     ? 'bg-green-100 text-green-800' 
                     : 'bg-yellow-100 text-yellow-800'
@@ -116,6 +113,7 @@ export default function Home() {
           ))}
         </div>
       </div>
+    </div>
     </div>
   );
 }
