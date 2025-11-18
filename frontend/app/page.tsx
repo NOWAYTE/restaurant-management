@@ -83,35 +83,37 @@ export default function Home() {
       {/* Header */}
       <header className="bg-white border-b border-gray-200">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-800">Restaurant Management</h1>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">
-                {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-              <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-  order.status === 'completed' 
-    ? 'bg-green-100 text-green-800' 
-    : 'bg-yellow-100 text-yellow-800'
-}`}>
-  {order.status}
-</span>
-              </div>
-              <p className="text-sm text-gray-600">Customer: {order.customer_name}</p>
-              <div className="mt-2">
-                {order.order_items?.length ? (
-                  order.order_items.map((item, index) => (
-                    <div key={index} className="flex justify-between text-sm">
-                      <span>{item.quantity}x {item.menu_item?.name || 'Unknown Item'}</span>
-                      <span>${((item.menu_item?.price || 0) * item.quantity).toFixed(2)}</span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500">No items in this order</p>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+  <div className="flex justify-between items-center">
+    <h1 className="text-2xl font-bold text-gray-800">Restaurant Management</h1>
+    <div className="flex items-center space-x-4">
+      <span className="text-sm text-gray-600">
+        {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+      </span>
+      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+        order.status === 'completed' 
+          ? 'bg-green-100 text-green-800' 
+          : 'bg-yellow-100 text-yellow-800'
+      }`}>
+        {order.status}
+      </span>
+    </div>
+  </div>
+  <div className="mt-4">
+    <p className="text-sm text-gray-600">Customer: {order.customer_name}</p>
+    <div className="mt-2">
+      {order.order_items?.length ? (
+        order.order_items.map((item, index) => (
+          <div key={index} className="flex justify-between text-sm">
+            <span>{item.quantity}x {item.menu_item?.name || 'Unknown Item'}</span>
+            <span>${((item.menu_item?.price || 0) * item.quantity).toFixed(2)}</span>
+          </div>
+        ))
+      ) : (
+        <p className="text-sm text-gray-500">No items in this order</p>
+      )}
+    </div>
+  </div>
+</div>
       </div>
     </div>
     </div>
