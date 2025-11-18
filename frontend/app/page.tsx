@@ -3,9 +3,9 @@
 
 import { useState, useEffect } from 'react';
 import { getMenuItems, createOrder, getOrders } from '../lib/api';
-import Menu from '../components/Menu';
 import OrderSummary from '../components/OrderSummary';
 import { MenuItem, OrderItem as OrderItemType, Order } from '../types/restaurant';
+import Menu from '@/components/Menut';
 
 export default function Home() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
