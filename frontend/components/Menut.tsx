@@ -3,11 +3,11 @@ import { useState } from 'react';
 import { MenuItem, OrderItem } from '../types/restaurant';
 
 interface MenuProps {
-  menuItems: MenuItem[];
+  menuItems?: MenuItem[]; // Make it optional
   onAddToOrder: (item: OrderItem) => void;
 }
 
-export default function Menu({ menuItems, onAddToOrder }: MenuProps) {
+export default function Menu({ menuItems = [], onAddToOrder }: MenuProps) {
   const [quantities, setQuantities] = useState<Record<number, number>>({});
 
   const handleAddToOrder = (menuItem: MenuItem) => {
@@ -15,6 +15,15 @@ export default function Menu({ menuItems, onAddToOrder }: MenuProps) {
     onAddToOrder({ menu_item_id: menuItem.id, quantity });
     setQuantities({ ...quantities, [menuItem.id]: 1 }); // Reset quantity
   };
+
+  if (!menuItems || menuItems.length === 0) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold">Menu</h2>
+        <p className="text-gray-500">No menu items available.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
