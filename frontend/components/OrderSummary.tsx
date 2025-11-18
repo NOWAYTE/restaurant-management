@@ -1,4 +1,5 @@
 // frontend/components/OrderSummary.tsx
+import { useState } from 'react';
 import { MenuItem, OrderItem } from '../types/restaurant';
 
 interface OrderSummaryProps {
