@@ -101,12 +101,16 @@ export default function Home() {
               </div>
               <p className="text-sm text-gray-600">Customer: {order.customer_name}</p>
               <div className="mt-2">
-                {order.order_items.map((item, index) => (
-                  <div key={index} className="flex justify-between text-sm">
-                    <span>{item.quantity}x {item.menu_item.name}</span>
-                    <span>${(item.menu_item.price * item.quantity).toFixed(2)}</span>
-                  </div>
-                ))}
+                {order.order_items?.length ? (
+                  order.order_items.map((item, index) => (
+                    <div key={index} className="flex justify-between text-sm">
+                      <span>{item.quantity}x {item.menu_item?.name || 'Unknown Item'}</span>
+                      <span>${((item.menu_item?.price || 0) * item.quantity).toFixed(2)}</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500">No items in this order</p>
+                )}
               </div>
             </div>
           ))}
