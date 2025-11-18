@@ -41,7 +41,7 @@ export default function ReservationsPage() {
   const fetchReservations = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/reservations`);
+      const response = await axios.get(`${API_URL}/reservations/`);
       setReservations(response.data);
     } catch (err) {
       setError("Failed to fetch reservations. Please try again later.");
