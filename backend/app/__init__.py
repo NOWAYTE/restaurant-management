@@ -24,5 +24,6 @@ def create_app():
     from app.routes import reservations
     app.register_blueprint(reservations.bp)
     app.register_blueprint(orders_bp, url_prefix="/api/orders")
+    app.register_blueprint(menu_bp, url_prefix="/api/menu")
     return app
 
