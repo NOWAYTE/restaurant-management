@@ -4,6 +4,8 @@ from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_socketio import SocketIO
 from app.extensions import db
+from datetime import timedelta
+from flask_jwt_extended import JWTManager
 # Import config from the root directory
 import sys
 from pathlib import Path
@@ -16,9 +18,6 @@ class Config:
     SECRET_KEY = SECRET_KEY
     JWT_SECRET_KEY = SECRET_KEY  # Add JWT secret key
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=24)  # Token expires in 24 hours
-from datetime import timedelta
-from flask_jwt_extended import JWTManager
-
 migrate = Migrate()
 
 def create_app():
