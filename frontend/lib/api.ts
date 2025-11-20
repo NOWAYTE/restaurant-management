@@ -59,7 +59,7 @@ api.interceptors.response.use(
 
 // Menu Items API
 export const getMenuItems = async (): Promise<any[]> => {
-  const response = await api.get('/menu/items');
+  const response = await api.get('/menu');
   return response.data;
 };
 
