@@ -6,6 +6,7 @@ from flask_socketio import SocketIO
 from app.extensions import db
 from datetime import timedelta
 from flask_jwt_extended import JWTManager
+from .socketio import init_socketio, socketio
 # Import config from the root directory
 import sys
 from pathlib import Path
@@ -28,6 +29,7 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
+    socketio = init_socketio(app)
 
     app.config['JWT_SECRET_KEY'] = Config.JWT_SECRET_KEY
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
@@ -78,6 +80,6 @@ def create_app():
     app.register_blueprint(orders_bp, url_prefix="/api/orders")
     app.register_blueprint(menu_bp, url_prefix="/api/menu")
 
-    return app
+    return app, socketio
 
 

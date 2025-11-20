@@ -2,8 +2,10 @@
 import { Inter } from 'next/font/google';
 import { Geist, Geist_Mono } from "next/font/google";
 import type { Metadata } from 'next';
-import { Providers } from './provider';
 import './globals.css';
+import { CartProvider } from '@/contexts/CartContext';
+import { Providers } from './provider';
+import Navigation from '@/components/Navigation';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -31,7 +33,12 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <Providers>
-          {children}
+          <CartProvider>
+            <SocketProvider>
+            <Navigation />
+            {children}
+            </SocketProvider>
+          </CartProvider>
         </Providers>
       </body>
     </html>
