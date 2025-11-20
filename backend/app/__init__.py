@@ -4,7 +4,18 @@ from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_socketio import SocketIO
 from app.extensions import db
-from app.config import Config
+# Import config from the root directory
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent))
+from config import SQLALCHEMY_DATABASE_URI, SQLALCHEMY_TRACK_MODIFICATIONS, SECRET_KEY
+
+class Config:
+    SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI
+    SQLALCHEMY_TRACK_MODIFICATIONS = SQLALCHEMY_TRACK_MODIFICATIONS
+    SECRET_KEY = SECRET_KEY
+    JWT_SECRET_KEY = SECRET_KEY  # Add JWT secret key
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=24)  # Token expires in 24 hours
 from datetime import timedelta
 from flask_jwt_extended import JWTManager
 
