@@ -1,12 +1,12 @@
 # backend/app/routes/admin.py
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from app import db
-from app.models import MenuItem, User, InventoryItem
-from datetime import datetime
+from app.extensions import db
+from app.models.menu_item import MenuItem
+from app.models.user import User
+from app.models.inventory_item import InventoryItem
 
 admin_bp = Blueprint('admin', __name__)
-
 # Menu Management
 @admin_bp.route('/menu', methods=['POST'])
 @jwt_required()
