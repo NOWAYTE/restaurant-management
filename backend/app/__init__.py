@@ -32,6 +32,26 @@ def create_app():
     app.config['JWT_SECRET_KEY'] = Config.JWT_SECRET_KEY
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
 
+    # Create default admin user if it doesn't exist
+    with app.app_context():
+        from app.models.user import User
+        admin_email = "admin@example.com"
+        admin = User.query.filter_by(email=admin_email).first()
+        
+        if not admin:
+            admin = User(
+                email=admin_email,
+                name="Admin User",
+                role="admin"
+            )
+            admin.set_password("admin123")  # Change this to a secure password in production
+            db.session.add(admin)
+            db.session.commit()
+            print("\n=== Created default admin user ===")
+            print(f"Email: {admin_email}")
+            print("Password: admin123")
+            print("==============================\n")
+
     # Import models here to avoid circular imports
     from app.models.reservation import Reservation
     from app.models.menu_item import MenuItem
@@ -59,3 +79,5 @@ def create_app():
     app.register_blueprint(menu_bp, url_prefix="/api/menu")
 
     return app
+
+
