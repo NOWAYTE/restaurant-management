@@ -6,6 +6,7 @@ import './globals.css';
 import { CartProvider } from '@/contexts/CartContext';
 import { Providers } from './provider';
 import Navigation from '@/components/Navigation';
+import { SocketProvider } from '@/contexts/SocketContext';
 
 const inter = Inter({ subsets: ['latin'] });
 
