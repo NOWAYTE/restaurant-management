@@ -57,4 +57,31 @@ api.interceptors.response.use(
   }
 );
 
+// Menu Items API
+export const getMenuItems = async (): Promise<any[]> => {
+  const response = await api.get('/menu/items');
+  return response.data;
+};
+
+export const createMenuItem = async (menuItem: any) => {
+  const response = await api.post('/menu/items', menuItem);
+  return response.data;
+};
+
+// Orders API
+export const getOrders = async (): Promise<any[]> => {
+  const response = await api.get('/orders');
+  return response.data;
+};
+
+export const createOrder = async (orderData: any) => {
+  const response = await api.post('/orders', orderData);
+  return response.data;
+};
+
+export const updateOrderStatus = async (orderId: number, status: string) => {
+  const response = await api.patch(`/orders/${orderId}`, { status });
+  return response.data;
+};
+
 export default api;

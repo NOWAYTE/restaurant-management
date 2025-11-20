@@ -2,8 +2,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getMenuItems, createOrder, getOrders } from '../lib/api';
 import OrderSummary from '../components/OrderSummary';
+import { getMenuItems, getOrders } from '@/lib/api';
 import { MenuItem, OrderItem as OrderItemType, Order } from '../types/restaurant';
 import Menu from '@/components/Menut';
 
