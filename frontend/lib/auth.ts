@@ -1,10 +1,8 @@
-import NextAuth from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
-import axios from 'axios';
+// lib/auth.ts
+import { AuthOptions } from "next-auth"
+import CredentialsProvider from "next-auth/providers/credentials"
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-
-export default NextAuth({
+export const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -13,18 +11,23 @@ export default NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
+        // Add your authentication logic here
+        // Example:
         try {
-          const response = await axios.post(`${API_BASE_URL}/auth/login`, {
-            email: credentials?.email,
-            password: credentials?.password,
-          });
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+            method: 'POST',
+            body: JSON.stringify(credentials),
+            headers: { "Content-Type": "application/json" }
+          })
+          const user = await res.json()
           
-          if (response.data.user) {
-            return response.data.user;
+          if (res.ok && user) {
+            return user
           }
-          return null;
+          return null
         } catch (error) {
-          return null;
+          console.error('Auth error:', error)
+          return null
         }
       }
     })
@@ -32,16 +35,20 @@ export default NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.user = user;
+        token.accessToken = user.accessToken
+        token.user = user
       }
-      return token;
+      return token
     },
     async session({ session, token }) {
-      session.user = token.user;
-      return session;
-    },
+      session.accessToken = token.accessToken
+      session.user = token.user
+      return session
+    }
   },
   pages: {
     signIn: '/auth/login',
+    error: '/auth/error',
   },
-});
+  secret: process.env.NEXTAUTH_SECRET,
+}
