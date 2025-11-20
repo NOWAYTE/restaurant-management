@@ -1,60 +1,60 @@
-
+// frontend/lib/api.ts
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-export const getMenuItems = async (): Promise<MenuItem[]> => {
-  const response = await axios.get(`${API_URL}/menu/`);
-  return response.data;
-};
+// Create axios instance
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
-export const createOrder = async (customerName: string, items: OrderItem[]): Promise<Order> => {
-  const response = await axios.post(`${API_URL}/orders/create`, {
-    customer_name: customerName,
-    items,
-  });
-  return response.data;
-};
-
-export const getOrders = async (): Promise<Order[]> => {
-  const response = await axios.get(`${API_URL}/orders/`);
-  return response.data;
-};
-
-// For Admin Menu
-export const createMenuItem = async (data: Omit<MenuItem, 'id'>): Promise<MenuItem> => {
-  const response = await fetch(`${API_BASE_URL}/menu/`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) {
-    throw new Error('Failed to create menu item');
+// Add auth token to requests
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-  return response.json();
-};
+  return config;
+});
 
-// For Kitchen Orders
-export const getOrders = async (): Promise<Order[]> => {
-  const response = await fetch(`${API_BASE_URL}/orders/`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch orders');
+// Handle token refresh and 401 errors
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      try {
+        // Try to refresh token
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (refreshToken) {
+          const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+            refresh_token: refreshToken,
+          });
+          
+          const { access_token, refresh_token } = response.data;
+          localStorage.setItem('token', access_token);
+          localStorage.setItem('refreshToken', refresh_token);
+          
+          // Retry the original request
+          originalRequest.headers.Authorization = `Bearer ${access_token}`;
+          return api(originalRequest);
+        }
+      } catch (error) {
+        // If refresh fails, redirect to login
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/auth/login';
+      }
+    }
+    
+    return Promise.reject(error);
   }
-  return response.json();
-};
+);
 
-export const updateOrderStatus = async (orderId: number, status: string): Promise<Order> => {
-  const response = await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ status }),
-  });
-  if (!response.ok) {
-    throw new Error('Failed to update order status');
-  }
-  return response.json();
-};
+export default api;

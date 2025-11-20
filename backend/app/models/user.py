@@ -1,5 +1,7 @@
-from app import db
+# backend/app/models/user.py
+from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+from app.extensions import db
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -9,12 +11,12 @@ class User(db.Model):
     name = db.Column(db.String(100), nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     role = db.Column(db.String(20), nullable=False, default='customer')  # admin, staff, customer
-    created_at = db.Column(db.DateTime, server_default=db.func.now())
-    updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    orders = db.relationship('Order', backref='customer', lazy=True)
-    reservations = db.relationship('Reservation', backref='customer', lazy=True)
+    orders = db.relationship('Order', back_populates='customer', lazy=True)
+    reservations = db.relationship('Reservation', back_populates='customer', lazy=True)
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
