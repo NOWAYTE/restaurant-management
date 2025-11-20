@@ -19,7 +19,7 @@ class Config:
     JWT_SECRET_KEY = SECRET_KEY  # Add JWT secret key
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=24)  # Token expires in 24 hours
 migrate = Migrate()
-
+jwt = JWTManager()
 def create_app():
     app = Flask(__name__)
     app.config.from_object("config")
