@@ -1,6 +1,6 @@
 // app/layout.tsx
 import { Inter } from 'next/font/google';
-import { Geist, Geist_Mono } from 'geist/font';
+// import { Geist, Geist_Mono } from 'geist/font';
 import type { Metadata } from 'next';
 import { SessionProvider } from 'next-auth/react';
 import './globals.css';
