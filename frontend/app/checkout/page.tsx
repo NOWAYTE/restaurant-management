@@ -2,7 +2,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCart } from '@/hooks/useCart';
+import useCart from '@/hooks/useCart';
 import { useState } from 'react';
 
 export default function CheckoutPage() {
