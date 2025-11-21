@@ -70,8 +70,28 @@ export const createMenuItem = async (menuItem: any) => {
 
 // Orders API
 export const getOrders = async (): Promise<any[]> => {
-  const response = await api.get('/orders');
-  return response.data;
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No authentication token found. Please log in.');
+    }
+
+    const response = await api.get('/orders', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    // Redirect to login or handle the error as needed
+    if (error.response?.status === 401) {
+      // Clear invalid token and redirect to login
+      localStorage.removeItem('token');
+      window.location.href = '/auth/login';
+    }
+    throw error; // Re-throw to allow components to handle the error
+  }
 };
 
 export const createOrder = async (orderData: any) => {
