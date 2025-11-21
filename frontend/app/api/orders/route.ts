@@ -1,9 +1,50 @@
 // frontend/app/api/orders/route.ts
 import { NextResponse } from 'next/server';
 
+export async function GET() {
+  try {
+    if (!process.env.NEXT_PUBLIC_API_URL) {
+      console.error('NEXT_PUBLIC_API_URL is not configured');
+      return NextResponse.json(
+        { error: 'Server configuration error' },
+        { status: 500 }
+      );
+    }
+
+    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/orders/`;
+    console.log('Fetching orders from:', apiUrl);
+
+    const response = await fetch(apiUrl, {
+      headers: {
+        'Content-Type': 'application/json',
+        // Add any required authentication headers here if needed
+      },
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      const error = await response.text().catch(() => 'Failed to parse error response');
+      console.error('Error response from backend:', error);
+      return NextResponse.json(
+        { error: `Failed to fetch orders: ${error}` },
+        { status: response.status }
+      );
+    }
+
+    const data = await response.json();
+    console.log('Received orders:', data);
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error('Error in GET /api/orders:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(request: Request) {
   try {
-    // Check if API URL is configured
     if (!process.env.NEXT_PUBLIC_API_URL) {
       console.error('NEXT_PUBLIC_API_URL is not configured');
       return NextResponse.json(
@@ -33,9 +74,6 @@ export async function POST(request: Request) {
     const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/orders/create`;
     console.log('Forwarding to:', apiUrl);
 
-    // Log the request payload for debugging
-    console.log('Request payload:', JSON.stringify(orderData, null, 2));
-
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
@@ -44,7 +82,6 @@ export async function POST(request: Request) {
       body: JSON.stringify(orderData),
     });
 
-    // Try to parse response as JSON, but handle non-JSON responses
     let responseData;
     try {
       responseData = await response.json();
@@ -73,7 +110,7 @@ export async function POST(request: Request) {
     return NextResponse.json(responseData);
   } catch (error) {
     console.error('Error in orders API route:', {
-      error: error,
+      error,
       message: error.message,
       stack: error.stack
     });
