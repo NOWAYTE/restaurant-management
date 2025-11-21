@@ -1,18 +1,24 @@
+// frontend/app/api/menu/route.ts
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import { CreateMenuItemDto } from '@/types/menu';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export async function POST(request: Request) {
   try {
-    const body: CreateMenuItemDto = await request.json();
-    
-    const menuItem = await prisma.menuItem.create({
-      data: {
-        ...body,
-        isAvailable: true,
+    const body = await request.json();
+    const response = await fetch(`${API_URL}/menu`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify(body),
     });
 
+    if (!response.ok) {
+      throw new Error('Failed to create menu item');
+    }
+
+    const menuItem = await response.json();
     return NextResponse.json(menuItem);
   } catch (error) {
     console.error('Error creating menu item:', error);
@@ -22,9 +28,11 @@ export async function POST(request: Request) {
 
 export async function GET() {
   try {
-    const menuItems = await prisma.menuItem.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
+    const response = await fetch(`${API_URL}/menu`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch menu items');
+    }
+    const menuItems = await response.json();
     return NextResponse.json(menuItems);
   } catch (error) {
     console.error('Error fetching menu items:', error);
