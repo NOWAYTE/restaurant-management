@@ -35,8 +35,11 @@ export default function CheckoutPage() {
           menu_item_id: item.id,
           quantity: item.quantity,
           price: item.price,
+          name: item.name, // Ensure we're sending the item name for better error reporting
         })),
       };
+
+      console.log('Submitting order:', orderData);
 
       const response = await fetch('/api/orders', {
         method: 'POST',
@@ -46,8 +49,12 @@ export default function CheckoutPage() {
         body: JSON.stringify(orderData),
       });
 
+      const responseData = await response.json().catch(() => ({}));
+      
+      console.log('API Response:', { status: response.status, data: responseData });
+
       if (!response.ok) {
-        throw new Error('Failed to place order');
+        throw new Error(responseData.message || `Failed to place order (Status: ${response.status})`);
       }
 
       // Clear cart and redirect to success page
@@ -55,7 +62,7 @@ export default function CheckoutPage() {
       router.push('/order/success');
     } catch (error) {
       console.error('Error placing order:', error);
-      alert('Failed to place order. Please try again.');
+      alert(`Failed to place order: ${error.message || 'Please try again.'}`);
       setIsSubmitting(false);
     }
   };
