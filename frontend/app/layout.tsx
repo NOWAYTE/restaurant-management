@@ -1,43 +1,31 @@
-// app/layout.tsx
+// frontend/app/layout.tsx
+'use client';
+import { usePathname } from 'next/navigation';
 import { Inter } from 'next/font/google';
-import { Geist, Geist_Mono } from "next/font/google";
-import type { Metadata } from 'next';
 import './globals.css';
+import { Providers } from './providers';
 import { CartProvider } from '@/contexts/CartContext';
-import { Providers } from './provider';
-import Navigation from '@/components/Navigation';
 import { SocketProvider } from '@/contexts/SocketContext';
+import Navigation from '@/components/Navigation';
 
 const inter = Inter({ subsets: ['latin'] });
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata: Metadata = {
-  title: "Restaurant Management",
-  description: "Restaurant management system",
-};
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const isAdminRoute = pathname?.startsWith('/admin');
+
   return (
     <html lang="en">
       <body className={inter.className}>
         <Providers>
           <CartProvider>
             <SocketProvider>
-            {!isAdminRoute && <Navigation />}
-            {children}
+              {!isAdminRoute && <Navigation />}
+              {children}
             </SocketProvider>
           </CartProvider>
         </Providers>
