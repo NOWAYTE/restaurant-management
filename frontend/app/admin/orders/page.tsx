@@ -19,9 +19,7 @@ interface Order {
     id: string;
     quantity: number;
     price: number;
-    menu_item: {
-      name: string;
-    };
+    menu_item: { name: string };
   }[];
 }
 
@@ -33,7 +31,6 @@ export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Fetch orders when component mounts
   useEffect(() => {
     const fetchOrders = async () => {
       try {
@@ -53,13 +50,10 @@ export default function OrdersPage() {
     };
 
     fetchOrders();
-
-    // Set up auto-refresh every 30 seconds
     const interval = setInterval(fetchOrders, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  // Update order status (still requires authentication)
   const updateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
     if (!session?.user?.token) {
       setError('You need to be logged in to update orders');
@@ -73,9 +67,9 @@ export default function OrdersPage() {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.user.token}`
+            Authorization: `Bearer ${session.user.token}`,
           },
-          body: JSON.stringify({ status: newStatus })
+          body: JSON.stringify({ status: newStatus }),
         }
       );
 
@@ -84,22 +78,17 @@ export default function OrdersPage() {
         throw new Error(errorData.error || 'Failed to update order status');
       }
 
-      // Update local state to reflect the change
-      setOrders(prevOrders => 
-        prevOrders.map(order => 
-          order.id === orderId ? { ...order, status: newStatus } : order
-        )
+      setOrders((prev) =>
+        prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
       );
-    } catch (error: any) {
-      console.error('Error updating order status:', error);
-      setError(error.message || 'Failed to update order status');
+    } catch (err: any) {
+      setError(err.message || 'Failed to update order status');
     }
   };
 
-  // Filter and sort orders
   const filteredOrders = orders
-    .filter(order => statusFilter === 'all' || order.status === statusFilter)
-    .filter(order => {
+    .filter((order) => statusFilter === 'all' || order.status === statusFilter)
+    .filter((order) => {
       const term = searchTerm.toLowerCase();
       return (
         order.customer_name.toLowerCase().includes(term) ||
@@ -107,12 +96,15 @@ export default function OrdersPage() {
         order.customer_phone.includes(term)
       );
     })
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    .sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500" />
       </div>
     );
   }
@@ -121,8 +113,8 @@ export default function OrdersPage() {
     return (
       <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded">
         <p>{error}</p>
-        <button 
-          onClick={() => window.location.reload()} 
+        <button
+          onClick={() => window.location.reload()}
           className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
         >
           Retry
@@ -135,6 +127,7 @@ export default function OrdersPage() {
     <div className="p-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <h1 className="text-2xl font-bold">Order Management</h1>
+
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <input
             type="text"
@@ -143,6 +136,7 @@ export default function OrdersPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+
           <select
             className="border rounded-lg px-4 py-2 bg-white"
             value={statusFilter}
@@ -160,7 +154,9 @@ export default function OrdersPage() {
 
       {filteredOrders.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
-          {orders.length === 0 ? 'No orders found' : 'No orders match your search criteria'}
+          {orders.length === 0
+            ? 'No orders found'
+            : 'No orders match your search criteria'}
         </div>
       ) : (
         <div className="space-y-4">
@@ -169,7 +165,8 @@ export default function OrdersPage() {
               key={order.id}
               className="bg-white rounded-lg shadow overflow-hidden border border-gray-200"
             >
-              <div className="p-4 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+              {/* HEADER */}
+              <div className="p-4 border-b bg-gray-50 flex flex-col sm:flex-row justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <span className="font-medium">Order #{order.id}</span>
                   {order.is_guest_order && (
@@ -178,23 +175,31 @@ export default function OrdersPage() {
                     </span>
                   )}
                 </div>
+
+                {/* STATUS BUTTONS */}
                 <div className="flex flex-wrap gap-2">
                   {order.status === 'pending' && (
                     <>
                       <button
-                        onClick={() => updateOrderStatus(order.id, 'preparing')}
+                        onClick={() =>
+                          updateOrderStatus(order.id, 'preparing')
+                        }
                         className="px-3 py-1 text-sm bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200"
                       >
                         Start Preparing
                       </button>
+
                       <button
-                        onClick={() => updateOrderStatus(order.id, 'cancelled')}
+                        onClick={() =>
+                          updateOrderStatus(order.id, 'cancelled')
+                        }
                         className="px-3 py-1 text-sm bg-red-100 text-red-800 rounded hover:bg-red-200"
                       >
                         Cancel
                       </button>
                     </>
                   )}
+
                   {order.status === 'preparing' && (
                     <button
                       onClick={() => updateOrderStatus(order.id, 'ready')}
@@ -203,6 +208,7 @@ export default function OrdersPage() {
                       Mark as Ready
                     </button>
                   )}
+
                   {order.status === 'ready' && (
                     <button
                       onClick={() => updateOrderStatus(order.id, 'completed')}
@@ -214,96 +220,78 @@ export default function OrdersPage() {
                 </div>
               </div>
 
+              {/* ORDER INFO */}
               <div className="p-4 space-y-2">
-                <p><span className="font-semibold">Customer:</span> {order.customer_name}</p>
-                <p><span className="font-semibold">Phone:</span> {order.customer_phone}</p>
-                {order.customer_email && <p><span className="font-semibold">Email:</span> {order.customer_email}</p>}
-                {order.customer_address && <p><span className="font-semibold">Address:</span> {order.customer_address}</p>}
-                <p><span className="font-semibold">Total:</span> ${(order.total || 0).toFixed(2)}</p>
-                <p><span className="font-semibold">Status:</span> 
-                  <span className={`ml-1 px-2 py-0.5 text-xs rounded-full ${
-                    order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                    order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
-                    order.status === 'ready' ? 'bg-green-100 text-green-800' :
-                    order.status === 'completed' ? 'bg-gray-100 text-gray-800' :
-                    'bg-red-100 text-red-800'
-                  }`}>
-                    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                <p>
+                  <span className="font-semibold">Customer:</span>{' '}
+                  {order.customer_name}
+                </p>
+
+                <p>
+                  <span className="font-semibold">Phone:</span>{' '}
+                  {order.customer_phone}
+                </p>
+
+                {order.customer_email && (
+                  <p>
+                    <span className="font-semibold">Email:</span>{' '}
+                    {order.customer_email}
+                  </p>
+                )}
+
+                {order.customer_address && (
+                  <p>
+                    <span className="font-semibold">Address:</span>{' '}
+                    {order.customer_address}
+                  </p>
+                )}
+
+                <p>
+                  <span className="font-semibold">Total:</span>{' '}
+                  ${(order.total || 0).toFixed(2)}
+                </p>
+
+                <p>
+                  <span className="font-semibold">Status:</span>
+                  <span
+                    className={`ml-1 px-2 py-0.5 text-xs rounded-full ${
+                      order.status === 'pending'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : order.status === 'preparing'
+                        ? 'bg-blue-100 text-blue-800'
+                        : order.status === 'ready'
+                        ? 'bg-green-100 text-green-800'
+                        : order.status === 'completed'
+                        ? 'bg-gray-100 text-gray-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}
+                  >
+                    {order.status.charAt(0).toUpperCase() +
+                      order.status.slice(1)}
                   </span>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {order.status === 'pending' && (
-                  <>
-                    <button
-                      onClick={() => updateOrderStatus(order.id, 'preparing')}
-                      className="px-3 py-1 text-sm bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200"
-                    >
-                      Start Preparing
-                    </button>
-                    <button
-                      onClick={() => updateOrderStatus(order.id, 'cancelled')}
-                      className="px-3 py-1 text-sm bg-red-100 text-red-800 rounded hover:bg-red-200"
-                    >
-                      Cancel
-                    </button>
-                  </>
-                )}
-                {order.status === 'preparing' && (
-                  <button
-                    onClick={() => updateOrderStatus(order.id, 'ready')}
-                    className="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded hover:bg-blue-200"
-                  >
-                    Mark as Ready
-                  </button>
-                )}
-                {order.status === 'ready' && (
-                  <button
-                    onClick={() => updateOrderStatus(order.id, 'completed')}
-                    className="px-3 py-1 text-sm bg-green-100 text-green-800 rounded hover:bg-green-200"
-                  >
-                    Complete Order
-                  </button>
-                )}
+                </p>
+
+                <p>
+                  <span className="font-semibold">Created:</span>{' '}
+                  {format(new Date(order.created_at), 'PPpp')}
+                </p>
+
+                {/* ITEMS */}
+                <div className="mt-2">
+                  <p className="font-semibold">Items:</p>
+                  <ul className="list-disc pl-5">
+                    {order.order_items.map((item) => (
+                      <li key={item.id}>
+                        {item.quantity}x {item.menu_item?.name} - $
+                        {(item.price || 0).toFixed(2)} each
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             </div>
-
-            <div className="p-4 space-y-2">
-              <p><span className="font-semibold">Customer:</span> {order.customer_name}</p>
-              <p><span className="font-semibold">Phone:</span> {order.customer_phone}</p>
-              {order.customer_email && <p><span className="font-semibold">Email:</span> {order.customer_email}</p>}
-              {order.customer_address && <p><span className="font-semibold">Address:</span> {order.customer_address}</p>}
-              <p><span className="font-semibold">Total:</span> ${(order.total || 0).toFixed(2)}</p>
-              <p><span className="font-semibold">Status:</span> 
-                <span className={`ml-1 px-2 py-0.5 text-xs rounded-full ${
-                  order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                  order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
-                  order.status === 'ready' ? 'bg-green-100 text-green-800' :
-                  order.status === 'completed' ? 'bg-gray-100 text-gray-800' :
-                  'bg-red-100 text-red-800'
-                }`}>
-                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                </span>
-              </p>
-              <p><span className="font-semibold">Created:</span> {format(new Date(order.created_at), 'PPpp')}</p>
-
-              <div className="mt-2">
-                <p className="font-semibold">Items:</p>
-                <ul className="list-disc pl-5">
-                  {(order.order_items || []).map((item) => (
-                    <li key={item.id}>
-                      {item.quantity}x {item.menu_item?.name || 'Unknown Item'} - ${(item.price || 0).toFixed(2)} each
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
-);
+          ))}
+        </div>
       )}
     </div>
   );
