@@ -8,12 +8,14 @@ from sqlalchemy import func
 dashboard_bp = Blueprint('dashboard', __name__)
 
 @dashboard_bp.route('/stats')
+@dashboard_bp.route('/stats')
 def get_dashboard_stats():
     try:
         # Get today's date range
         today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         tomorrow = today + timedelta(days=1)
         
+        print("Fetching today's revenue...")  # Debug log
         # Calculate today's revenue
         today_revenue = db.session.query(
             func.coalesce(func.sum(Order.total), 0)
@@ -23,20 +25,26 @@ def get_dashboard_stats():
             Order.created_at < tomorrow
         ).scalar() or 0
 
+        print("Counting active orders...")  # Debug log
         # Count active orders
         active_orders = db.session.query(Order).filter(
             Order.status.in_(['pending', 'preparing', 'ready'])
         ).count()
 
+        print("Counting menu items...")  # Debug log
         # Count menu items
         menu_items = MenuItem.query.count()
 
+        print("Counting today's reservations...")  # Debug log
         # Count today's reservations
-        today_reservations = Reservation.query.filter(
-            Reservation.date >= today.date(),
-            Reservation.date < tomorrow.date()
-        ).count()
+        today_reservations = 0  # Default to 0 if Reservation model doesn't exist
+        if 'Reservation' in globals():
+            today_reservations = Reservation.query.filter(
+                Reservation.date >= today.date(),
+                Reservation.date < tomorrow.date()
+            ).count()
 
+        print("Fetching recent orders...")  # Debug log
         # Get recent orders
         recent_orders = Order.query.order_by(
             Order.created_at.desc()
@@ -45,10 +53,10 @@ def get_dashboard_stats():
         # Format recent orders
         formatted_orders = [{
             'id': f"#{order.id:03d}",
-            'customer': order.customer_name or 'Guest',
-            'total': f"${order.total:.2f}",
-            'status': order.status,
-            'time': format_time_ago(order.created_at)
+            'customer': getattr(order, 'customer_name', 'Guest') or 'Guest',
+            'total': f"${float(getattr(order, 'total', 0)):.2f}",
+            'status': getattr(order, 'status', 'pending'),
+            'time': format_time_ago(getattr(order, 'created_at', datetime.utcnow()))
         } for order in recent_orders]
 
         return jsonify({
@@ -62,8 +70,15 @@ def get_dashboard_stats():
         })
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
+        import traceback
+        error_details = {
+            'error': str(e),
+            'type': type(e).__name__,
+            'traceback': traceback.format_exc()
+        }
+        print("Error in get_dashboard_stats:", error_details)  # Debug log
+        return jsonify(error_details), 500
+        
 def format_time_ago(dt):
     now = datetime.utcnow()
     diff = now - dt
