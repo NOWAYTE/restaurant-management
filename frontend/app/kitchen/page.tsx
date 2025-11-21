@@ -40,7 +40,7 @@ export default function KitchenPage() {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch('/api/kitchen/orders', {
+      const response = await fetch('http://127.0.0.1:5000/api/orders/kitchen', {
         headers: {
           'Authorization': `Bearer ${session?.access_token}`
         }
@@ -71,7 +71,7 @@ export default function KitchenPage() {
 
   const updateOrderStatus = async (orderId: number, newStatus: 'preparing' | 'ready') => {
     try {
-      const response = await fetch(`/api/kitchen/orders/${orderId}/status`, {
+      const response = await fetch(`http://127.0.0.1:5000/api/orders/kitchen/${orderId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
