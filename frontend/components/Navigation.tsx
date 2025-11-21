@@ -35,11 +35,10 @@ export default function Navigation() {
                   {(session.user?.user?.role === 'admin' || session.user?.user?.role === 'kitchen') && (
                     <Link
                       href="/kitchen"
-                      className={`${
-                        pathname === '/kitchen'
+                      className={`${pathname === '/kitchen'
                           ? 'border-blue-500 text-gray-900'
                           : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                      } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+                        } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
                     >
                       Kitchen
                     </Link>
@@ -47,11 +46,10 @@ export default function Navigation() {
                   {session.user?.user?.role === 'admin' && (
                     <Link
                       href="/admin"
-                      className={`${
-                        pathname.startsWith('/admin')
+                      className={`${pathname.startsWith('/admin')
                           ? 'border-blue-500 text-gray-900'
                           : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                      } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+                        } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
                     >
                       Admin
                     </Link>
@@ -121,10 +119,10 @@ export default function Navigation() {
             </div>
 
             {session ? (
-              session.user.role !== 'admin' ? (
+              session.user?.user?.role !== 'admin' ? (
                 <div className="ml-4 flex items-center md:ml-6">
                   <span className="text-sm text-gray-700 mr-4">
-                    {session.user.email}
+                    {session.user?.email || session.user?.user?.email}
                   </span>
                   <button
                     onClick={() => signOut()}
@@ -136,7 +134,9 @@ export default function Navigation() {
               ) : (
                 <div className="ml-4 flex items-center">
                   <span className="text-sm font-medium text-gray-700">
-                    {session.user.role.charAt(0).toUpperCase() + session.user.role.slice(1)}
+                    {session.user?.user?.role ?
+                      session.user.user.role.charAt(0).toUpperCase() + session.user.user.role.slice(1) :
+                      'User'}
                   </span>
                 </div>
               )
