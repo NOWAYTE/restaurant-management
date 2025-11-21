@@ -70,24 +70,25 @@ export const handler = NextAuth({
   ],
 
   callbacks: {
-    async jwt({ token, user, account }) {
-      if (account && user) {
+    async jwt({ token, user }) {
+      if (user) {
         return {
           ...token,
-          accessToken: account.access_token,
-          refreshToken: account.refresh_token,
-          accessTokenExpires: account.expires_at * 1000,
+          accessToken: user.accessToken, // <-- use user.accessToken from authorize()
           user,
         };
       }
-      return token;
+    // On subsequent calls, keep existing token
+    return token;
     },
     async session({ session, token }) {
-      session.accessToken = token.accessToken;
-      session.user = token.user;
-      return session;
+    // Attach token and user to session
+    session.accessToken = token.accessToken;
+    session.user = token.user as any;
+    return session;
     },
-  },
+},
+
 
   pages: {
     signIn: '/auth/login',

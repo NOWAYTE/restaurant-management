@@ -27,7 +27,7 @@ interface Order {
 
 export default function OrdersPage() {
   const { data: session } = useSession();
-  console.log('Session token exists:', session?.accessToken);
+  console.log('Session token exists:', session?.user?.token);
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,13 +41,13 @@ export default function OrdersPage() {
   }, [session]);
 
   const fetchOrders = async () => {
-    if (!session?.accessToken) return;
+    if (!session?.user?.token) return;
 
     try {
       const response = await fetch('/api/orders', { // use relative URL if possible
         headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.user?.token}`,
       }
     });
 
@@ -67,15 +67,15 @@ export default function OrdersPage() {
   useEffect(() => {
     console.log('=== Fetch Orders Effect Triggered ===');
     console.log('Session exists:', !!session);
-    console.log('Session token exists:', !!session?.accessToken);
+    console.log('Session token exists:', !!session?.user?.token);
     
     console.log('Session data:', {
       hasSession: !!session,
-      hasToken: !!(session as any)?.accessToken,
+      hasToken: !!(session as any)?.user?.token,
       sessionKeys: session ? Object.keys(session) : 'no session'
     });
     
-    if (!session.accessToken) {
+    if (!session?.user?.token) {
       const errorMsg = 'No access token found. Please sign in again.';
       console.error(errorMsg);
       setError(errorMsg);
@@ -84,7 +84,7 @@ export default function OrdersPage() {
     }
       console.log('Session data:', {
     hasSession: !!session,
-    hasToken: !!(session as any)?.accessToken,
+    hasToken: !!(session as any)?.user?.token,
     sessionKeys: session ? Object.keys(session) : 'no session'
     });
 
@@ -101,13 +101,13 @@ export default function OrdersPage() {
       try {
         const url = 'http://127.0.0.1:5000/api/orders';
         console.log('Making request to:', url);
-        console.log('Using token:', session.accessToken ? 'Token exists' : 'No token');
+        console.log('Using token:', session?.user?.token ? 'Token exists' : 'No token');
         
         const response = await fetch(url, {
           signal: controller.signal,
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${session.accessToken}`,
+            Authorization: `Bearer ${session?.user?.token}`,
           },
           credentials: 'include'
         });
@@ -165,7 +165,7 @@ export default function OrdersPage() {
 
   // Update order status
   const updateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
-    if (!session?.accessToken) return;
+    if (!session?.user?.token) return;
 
     try {
       const response = await fetch(
@@ -174,7 +174,7 @@ export default function OrdersPage() {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${session.accessToken}`,
+            Authorization: `Bearer ${session?.user?.token}`,
           },
           body: JSON.stringify({ status: newStatus }),
           credentials: 'include'
