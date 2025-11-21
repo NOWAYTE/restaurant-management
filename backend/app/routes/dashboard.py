@@ -7,7 +7,7 @@ from sqlalchemy import func
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
-@dashboard_bp.route('/api/dashboard/stats')
+@dashboard_bp.route('/stats')
 def get_dashboard_stats():
     try:
         # Get today's date range

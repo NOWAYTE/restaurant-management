@@ -73,7 +73,7 @@ def create_app():
     app.register_blueprint(kitchen_bp, url_prefix='/api/kitchen')
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
     app.register_blueprint(orders_bp, url_prefix='/api/orders')
-    app.register_blueprint(dashboard_bp, url_prefix='/api')
+    app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
 
 
     # Register blueprints
