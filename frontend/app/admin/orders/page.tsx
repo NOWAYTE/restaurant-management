@@ -72,14 +72,14 @@ export default function OrdersPage() {
     }
   };
 
-  const filteredOrders = orders
-    .filter(order => 
-      statusFilter === 'all' ? true : order.status === statusFilter
-    )
-    .filter(order =>
-      order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.id.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+  const filteredOrders = (Array.isArray(orders) ? orders : [])
+  .filter(order => 
+    statusFilter === 'all' ? true : order.status === statusFilter
+  )
+  .filter(order =>
+    order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    order.id.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (isLoading) {
     return (
