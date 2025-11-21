@@ -16,21 +16,31 @@ def get_kitchen_orders():
             Order.status.in_(['pending', 'preparing', 'ready'])
         ).order_by(Order.created_at.asc()).all()
 
-        return jsonify([{
-            'id': order.id,
-            'tableNumber': order.table_number,
-            'status': order.status,
-            'createdAt': order.created_at.isoformat() if order.created_at else None,
-            'items': [{
-                'id': item.id,
-                'name': item.menu_item.name if item.menu_item else 'Unknown Item',
-                'quantity': item.quantity,
-                'specialRequests': item.special_requests,
-                'estimatedTime': item.menu_item.preparation_time if item.menu_item else 15
-            } for item in order.order_items]
-        } for order in orders]), 200
+        return jsonify([
+            {
+                'id': order.id,
+                'tableNumber': order.table_number,
+                'status': order.status,
+                'createdAt': order.created_at.isoformat() if order.created_at else None,
+                'items': [
+                    {
+                        'id': item.id,
+                        'name': item.menu_item.name if item.menu_item else 'Unknown Item',
+                        'quantity': item.quantity,
+                        'specialRequests': item.special_requests,
+                        'estimatedTime': (
+                            item.menu_item.preparation_time if item.menu_item else 15
+                        )
+                    }
+                    for item in order.order_items
+                ]
+            }
+            for order in orders
+        ]), 200
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 @kitchen_bp.route('/orders/<int:order_id>/status', methods=['PUT'])
 @jwt_required()
@@ -38,7 +48,7 @@ def update_order_status(order_id):
     try:
         data = request.get_json()
         new_status = data.get('status')
-        
+
         if new_status not in ['preparing', 'ready']:
             return jsonify({'error': 'Invalid status'}), 400
 
@@ -46,7 +56,7 @@ def update_order_status(order_id):
         order.status = new_status
         order.updated_at = datetime.utcnow()
         db.session.commit()
-        
+
         return jsonify({
             'message': 'Order status updated',
             'order': {
@@ -54,9 +64,11 @@ def update_order_status(order_id):
                 'status': order.status
             }
         }), 200
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
 
 @kitchen_bp.route('/stats', methods=['GET'])
 @jwt_required()
@@ -70,13 +82,16 @@ def get_kitchen_stats():
             Order.status.in_(['pending', 'preparing', 'ready'])
         ).group_by(Order.status).all()
 
-        # Calculate average preparation time (in minutes)
-        # This is a simplified example - you might want to track actual preparation times
-        avg_prep_time = 15  # Default value
-        
+        # Convert safely to a dict
+        status_counts_dict = {status: count for status, count in status_counts}
+
+        # Placeholder average time
+        avg_prep_time = 15
+
         return jsonify({
-            'statusCounts': dict(status_counts),
+            'statusCounts': status_counts_dict,
             'avgPrepTime': avg_prep_time
         }), 200
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
