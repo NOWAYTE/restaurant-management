@@ -51,7 +51,15 @@ export default function AdminLayout({
                     <NavItem href="/admin/dashboard" icon="dashboard">
                         Dashboard
                     </NavItem>
-                    {/* More nav items... */}
+                    <NavItem href="/admin/menu" icon="menu">
+                        Menu Management
+                    </NavItem>
+                    <NavItem href="/admin/orders" icon="shopping-cart">
+                        Orders
+                    </NavItem>
+                    <NavItem href="/admin/reservations" icon="calendar">
+                        Reservations
+                    </NavItem> 
                 </nav>
             </div>
 
