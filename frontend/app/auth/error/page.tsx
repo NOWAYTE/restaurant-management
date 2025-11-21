@@ -1,21 +1,22 @@
-// app/auth/unauthorized/page.tsx
+// app/auth/error/page.tsx
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
 
-export default function UnauthorizedPage() {
-  const router = useRouter();
-  const { status } = useSession();
+export default function AuthErrorPage() {
+  const searchParams = useSearchParams();
+  const error = searchParams.get('error');
 
-  // Redirect to home if not authenticated
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/auth/login');
-    }
-  }, [status, router]);
+  const errorMessages: { [key: string]: string } = {
+    Configuration: 'There is a problem with the server configuration.',
+    AccessDenied: 'You do not have permission to sign in.',
+    Verification: 'The sign in link is no longer valid.',
+    Default: 'An error occurred during sign in.',
+  };
+
+  const errorMessage = error ? errorMessages[error] || errorMessages.Default : errorMessages.Default;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
@@ -37,25 +38,23 @@ export default function UnauthorizedPage() {
               />
             </svg>
           </div>
-          <h2 className="mt-4 text-2xl font-bold text-gray-900">Access Denied</h2>
-          <p className="mt-2 text-gray-600">
-            You don't have permission to access this page.
-          </p>
+          <h2 className="mt-4 text-2xl font-bold text-gray-900">Authentication Error</h2>
+          <p className="mt-2 text-gray-600">{errorMessage}</p>
           <div className="mt-6">
             <Link
-              href="/"
+              href="/auth/login"
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              Return to Home
+              Return to Sign In
             </Link>
           </div>
           <div className="mt-4">
-            <button
-              onClick={() => router.back()}
+            <Link
+              href="/"
               className="text-sm font-medium text-blue-600 hover:text-blue-500"
             >
-              Go back
-            </button>
+              Go to Home
+            </Link>
           </div>
         </div>
       </div>
