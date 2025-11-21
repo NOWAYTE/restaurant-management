@@ -35,52 +35,32 @@ export default function OrdersPage() {
 
   // Fetch orders from Flask backend
   useEffect(() => {
-    console.log('Component mounted, checking session...');
-    if (!session) {
-      console.log('No session found, waiting for session...');
-      return;
-    }
-
-    console.log('Session found, checking access token...');
+    if (!session) return;
     if (!session.accessToken) {
-      console.error('No access token in session');
       setError('No access token found. Please sign in again.');
       setIsLoading(false);
       return;
     }
 
-    console.log('Access token found, fetching orders...');
-    
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      controller.abort();
-    }, 10000); // 10 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     const fetchOrders = async () => {
       try {
-        console.log('Making API request to:', 'http://127.0.0.1:5000/api/orders/');
         const response = await fetch('http://127.0.0.1:5000/api/orders/', {
           signal: controller.signal,
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.accessToken}`,
+            Authorization: `Bearer ${session.accessToken}`,
           },
         });
 
-        console.log('Response status:', response.status);
-        
-        if (!response.ok) {
-          const text = await response.text();
-          console.error('Error response:', text);
-          throw new Error(`Failed to fetch orders: ${response.status} ${response.statusText}`);
-        }
+        if (!response.ok) throw new Error(`Failed to fetch orders: ${response.status}`);
 
         const data = await response.json();
-        console.log('Orders data received:', data);
         setOrders(data);
         setError(null);
       } catch (error: any) {
-        console.error('Error in fetchOrders:', error);
         if (error.name === 'AbortError') {
           setError('Request timed out. Please check your connection and try again.');
         } else {
@@ -102,10 +82,7 @@ export default function OrdersPage() {
 
   // Update order status
   const updateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
-    if (!session?.accessToken) {
-      alert('Cannot update order: missing access token');
-      return;
-    }
+    if (!session?.accessToken) return;
 
     try {
       const response = await fetch(
@@ -120,18 +97,14 @@ export default function OrdersPage() {
         }
       );
 
-      if (!response.ok) {
-        const text = await response.text();
-        console.error('Failed to update order status:', text);
-        throw new Error('Failed to update order status');
-      }
+      if (!response.ok) throw new Error('Failed to update order status');
 
       setOrders((prev) =>
         prev.map((order) =>
           order.id === orderId ? { ...order, status: newStatus } : order
         )
       );
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
       alert('Failed to update order status. Please try again.');
     }
@@ -154,7 +127,6 @@ export default function OrdersPage() {
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
 
-  // Error state
   if (error) {
     return (
       <div className="p-6">
@@ -172,25 +144,22 @@ export default function OrdersPage() {
     );
   }
 
-  // Loading state
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
         <span className="text-gray-600">Loading orders...</span>
-        <span className="text-sm text-gray-500">This may take a moment</span>
       </div>
     );
   }
 
-  // No orders state
-  if (!orders || orders.length === 0) {
+  if (!orders.length) {
     return (
       <div className="text-center py-12">
         <h3 className="text-lg font-medium text-gray-900">No orders found</h3>
         <p className="mt-1 text-sm text-gray-500">
           {statusFilter !== 'all'
-            ? `No ${statusFilter} orders found.`
+            ? `No ${statusFilter} orders found.` 
             : 'No orders have been placed yet.'}
         </p>
       </div>
@@ -202,7 +171,6 @@ export default function OrdersPage() {
       {/* Header with search + filter */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <h1 className="text-2xl font-bold">Order Management</h1>
-
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <input
             type="text"
@@ -233,7 +201,6 @@ export default function OrdersPage() {
             key={order.id}
             className="bg-white rounded-lg shadow overflow-hidden border border-gray-200 hover:shadow-md transition-shadow"
           >
-            {/* Order header */}
             <div className="p-4 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row justify-between gap-2">
               <div className="flex items-center">
                 <span className="font-medium">Order #{order.id}</span>
@@ -243,7 +210,6 @@ export default function OrdersPage() {
                   </span>
                 )}
               </div>
-
               <div className="flex justify-end space-x-2 text-sm font-medium">
                 {order.status === 'pending' && (
                   <>
@@ -261,7 +227,6 @@ export default function OrdersPage() {
                     </button>
                   </>
                 )}
-
                 {order.status === 'preparing' && (
                   <button
                     onClick={() => updateOrderStatus(order.id, 'ready')}
@@ -270,7 +235,6 @@ export default function OrdersPage() {
                     Mark as Ready
                   </button>
                 )}
-
                 {order.status === 'ready' && (
                   <button
                     onClick={() => updateOrderStatus(order.id, 'completed')}
@@ -282,186 +246,20 @@ export default function OrdersPage() {
               </div>
             </div>
 
-            {/* Order details */}
             <div className="p-4 space-y-2">
-              <p>
-                <span className="font-semibold">Customer:</span> {order.customer_name}
-              </p>
-              <p>
-                <span className="font-semibold">Phone:</span> {order.customer_phone}
-              </p>
-              {order.customer_email && (
-                <p>
-                  <span className="font-semibold">Email:</span> {order.customer_email}
-                </p>
-              )}
-              {order.customer_address && (
-                <p>
-                  <span className="font-semibold">Address:</span> {order.customer_address}
-                </p>
-              )}
-              <p>
-                <span className="font-semibold">Total:</span> ${order.total.toFixed(2)}
-              </p>
-              <p>
-                <span className="font-semibold">Created:</span>{' '}
-                {format(new Date(order.created_at), 'PPpp')}
-              </p>
+              <p><span className="font-semibold">Customer:</span> {order.customer_name}</p>
+              <p><span className="font-semibold">Phone:</span> {order.customer_phone}</p>
+              {order.customer_email && <p><span className="font-semibold">Email:</span> {order.customer_email}</p>}
+              {order.customer_address && <p><span className="font-semibold">Address:</span> {order.customer_address}</p>}
+              <p><span className="font-semibold">Total:</span> ${order.total.toFixed(2)}</p>
+              <p><span className="font-semibold">Created:</span> {format(new Date(order.created_at), 'PPpp')}</p>
 
               <div className="mt-2">
                 <p className="font-semibold">Items:</p>
                 <ul className="list-disc pl-5">
                   {order.order_items.map((item) => (
                     <li key={item.id}>
-                      {item.quantity}x {item.menu_item?.name || 'Unknown Item'} - $
-                      {item.price.toFixed(2)} each
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        ))}
-
-        {filteredOrders.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No orders match your search criteria
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-            <div className="p-4 space-y-2">
-              <p>
-                <span className="font-semibold">Customer:</span> {order.customer_name}
-              </p>
-              <p>
-                <span className="font-semibold">Phone:</span> {order.customer_phone}
-              </p>
-              {order.customer_email && (
-                <p>
-                  <span className="font-semibold">Email:</span> {order.customer_email}
-                </p>
-              )}
-              {order.customer_address && (
-                <p>
-                  <span className="font-semibold">Address:</span> {order.customer_address}
-                </p>
-              )}
-              <p>
-                <span className="font-semibold">Total:</span> ${order.total.toFixed(2)}
-              </p>
-              <p>
-                <span className="font-semibold">Created:</span>{' '}
-                {format(new Date(order.created_at), 'PPpp')}
-              </p>
-
-              <div className="mt-2">
-                <p className="font-semibold">Items:</p>
-                <ul className="list-disc pl-5">
-                  {order.order_items.map((item) => (
-                    <li key={item.id}>
-                      {item.quantity}x {item.menu_item?.name || 'Unknown Item'} - $
-                      {item.price.toFixed(2)} each
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        ))}
-
-        {filteredOrders.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No orders match your search criteria
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-            <div className="p-4 space-y-2">
-              <p>
-                <span className="font-semibold">Customer:</span> {order.customer_name}
-              </p>
-              <p>
-                <span className="font-semibold">Phone:</span> {order.customer_phone}
-              </p>
-              {order.customer_email && (
-                <p>
-                  <span className="font-semibold">Email:</span> {order.customer_email}
-                </p>
-              )}
-              {order.customer_address && (
-                <p>
-                  <span className="font-semibold">Address:</span> {order.customer_address}
-                </p>
-              )}
-              <p>
-                <span className="font-semibold">Total:</span> ${order.total.toFixed(2)}
-              </p>
-              <p>
-                <span className="font-semibold">Created:</span>{' '}
-                {format(new Date(order.created_at), 'PPpp')}
-              </p>
-
-              <div className="mt-2">
-                <p className="font-semibold">Items:</p>
-                <ul className="list-disc pl-5">
-                  {order.order_items.map((item) => (
-                    <li key={item.id}>
-                      {item.quantity}x {item.menu_item?.name || 'Unknown Item'} - $
-                      {item.price.toFixed(2)} each
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        ))}
-
-        {filteredOrders.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No orders match your search criteria
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-            <div className="p-4 space-y-2">
-              <p>
-                <span className="font-semibold">Customer:</span> {order.customer_name}
-              </p>
-              <p>
-                <span className="font-semibold">Phone:</span> {order.customer_phone}
-              </p>
-              {order.customer_email && (
-                <p>
-                  <span className="font-semibold">Email:</span> {order.customer_email}
-                </p>
-              )}
-              {order.customer_address && (
-                <p>
-                  <span className="font-semibold">Address:</span> {order.customer_address}
-                </p>
-              )}
-              <p>
-                <span className="font-semibold">Total:</span> ${order.total.toFixed(2)}
-              </p>
-              <p>
-                <span className="font-semibold">Created:</span>{' '}
-                {format(new Date(order.created_at), 'PPpp')}
-              </p>
-
-              <div className="mt-2">
-                <p className="font-semibold">Items:</p>
-                <ul className="list-disc pl-5">
-                  {order.order_items.map((item) => (
-                    <li key={item.id}>
-                      {item.quantity}x {item.menu_item?.name || 'Unknown Item'} - $
-                      {item.price.toFixed(2)} each
+                      {item.quantity}x {item.menu_item?.name || 'Unknown Item'} - ${item.price.toFixed(2)} each
                     </li>
                   ))}
                 </ul>
