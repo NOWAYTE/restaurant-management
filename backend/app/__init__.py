@@ -79,6 +79,6 @@ def create_app():
     app.register_blueprint(reservations.bp)
     app.register_blueprint(menu_bp, url_prefix="/api/menu")
 
-    return app, socketio
+    return app
 
 
