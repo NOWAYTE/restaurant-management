@@ -1,8 +1,9 @@
+// frontend/app/admin/dashboard/page.tsx
 'use client';
 
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { 
   DollarSign, 
   Users, 
@@ -21,62 +22,50 @@ type Order = {
   id: string;
   customer: string;
   total: string;
-  status: 'completed' | 'preparing' | 'pending';
+  status: 'completed' | 'preparing' | 'pending' | 'ready' | 'cancelled';
   time: string;
 };
 
-const recentOrders: Order[] = [
-  { id: '#ORD-001', customer: 'John Doe', total: '$85.50', status: 'completed', time: '2 min ago' },
-  { id: '#ORD-002', customer: 'Jane Smith', total: '$42.25', status: 'preparing', time: '15 min ago' },
-  { id: '#ORD-003', customer: 'Robert Johnson', total: '$120.75', status: 'pending', time: '1 hr ago' },
-  { id: '#ORD-004', customer: 'Emily Davis', total: '$65.30', status: 'completed', time: '2 hrs ago' },
-];
+type DashboardStats = {
+  todayRevenue: number;
+  activeOrders: number;
+  menuItems: number;
+  todayReservations: number;
+};
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [recentOrders, setRecentOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
       redirect('/auth/login');
     } else if (status === 'authenticated' && session?.user?.role !== 'admin') {
       redirect('/auth/unauthorized');
+    } else {
+      fetchDashboardData();
     }
   }, [status, session]);
 
-  if (status !== 'authenticated') {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
-      </div>
-    );
-  }
-
-  const stats = [
-    { 
-      title: "Today's Revenue", 
-      value: "$1,250.00", 
-      change: "+12% from yesterday",
-      icon: <DollarSign className="h-4 w-4 text-muted-foreground" />,
-    },
-    { 
-      title: "Active Orders", 
-      value: "24", 
-      change: "+4 from yesterday",
-      icon: <Package className="h-4 w-4 text-muted-foreground" />,
-    },
-    { 
-      title: "Menu Items", 
-      value: "58", 
-      change: "5 new items",
-      icon: <Utensils className="h-4 w-4 text-muted-foreground" />,
-    },
-    { 
-      title: "Upcoming Reservations", 
-      value: "12", 
-      change: "3 today",
-      icon: <Calendar className="h-4 w-4 text-muted-foreground" />,
+  const fetchDashboardData = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/dashboard/stats');
+      if (!response.ok) {
+        throw new Error('Failed to fetch dashboard data');
+      }
+      const data = await response.json();
+      setStats(data.stats);
+      setRecentOrders(data.recentOrders);
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+      setError('Failed to load dashboard data. Please try again later.');
+    } finally {
+      setIsLoading(false);
     }
-  ];
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -84,12 +73,62 @@ export default function AdminDashboard() {
         return 'bg-green-100 text-green-800';
       case 'preparing':
         return 'bg-blue-100 text-blue-800';
+      case 'ready':
+        return 'bg-purple-100 text-purple-800';
       case 'pending':
         return 'bg-amber-100 text-amber-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   };
+
+  if (status !== 'authenticated' || isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+        <p>{error}</p>
+        <Button 
+          onClick={fetchDashboardData} 
+          variant="outline" 
+          className="mt-2"
+        >
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
+  const statCards = [
+    { 
+      title: "Today's Revenue", 
+      value: `$${stats?.todayRevenue.toFixed(2) || '0.00'}`, 
+      icon: <DollarSign className="h-4 w-4 text-muted-foreground" />,
+    },
+    { 
+      title: "Active Orders", 
+      value: stats?.activeOrders.toString() || '0', 
+      icon: <Package className="h-4 w-4 text-muted-foreground" />,
+    },
+    { 
+      title: "Menu Items", 
+      value: stats?.menuItems.toString() || '0', 
+      icon: <Utensils className="h-4 w-4 text-muted-foreground" />,
+    },
+    { 
+      title: "Today's Reservations", 
+      value: stats?.todayReservations.toString() || '0', 
+      icon: <Calendar className="h-4 w-4 text-muted-foreground" />,
+    }
+  ];
 
   return (
     <div className="space-y-6">
@@ -98,81 +137,70 @@ export default function AdminDashboard() {
         <p className="text-muted-foreground">Here's what's happening with your restaurant today.</p>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, index) => (
-          <Card key={index} className="hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+        {statCards.map((stat, index) => (
+          <Card key={index}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
                 {stat.title}
               </CardTitle>
-              <div className="p-2 rounded-full bg-primary/10">
-                {stat.icon}
-              </div>
+              {stat.icon}
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground mt-1">{stat.change}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Recent Activity */}
-      <div className="grid gap-4 md:grid-cols-2">
-        {/* Recent Orders */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <Card className="col-span-4">
+          <CardHeader>
             <CardTitle>Recent Orders</CardTitle>
-            <Button variant="ghost" size="sm" className="text-primary">
-              View All
-            </Button>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-8">
               {recentOrders.map((order) => (
-                <div key={order.id} className="flex items-center justify-between p-3 hover:bg-muted/50 rounded-lg transition-colors">
-                  <div>
-                    <p className="font-medium">{order.id}</p>
-                    <p className="text-sm text-muted-foreground">{order.customer}</p>
+                <div key={order.id} className="flex items-center">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      {order.id} • {order.customer}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {order.total} • {order.time}
+                    </p>
                   </div>
-                  <div className="text-right">
-                    <p className="font-medium">{order.total}</p>
-                    <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(order.status)}`}>
+                  <div className="ml-auto">
+                    <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(order.status)}`}>
                       {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                     </span>
                   </div>
                 </div>
               ))}
+              {recentOrders.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No recent orders found
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
-
-        {/* Quick Actions */}
-        <Card>
+        <Card className="col-span-3">
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-3">
-            <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2">
-              <ShoppingCart className="h-5 w-5" />
-              <span>New Order</span>
+          <CardContent className="space-y-4">
+            <Button className="w-full" variant="outline">
+              <Plus className="mr-2 h-4 w-4" />
+              New Order
             </Button>
-            <Button 
-              variant="outline" 
-              className="h-24 flex flex-col items-center justify-center gap-2"
-              onClick={() => router.push('/admin/menu/new')}
-            >
-              <Plus className="h-5 w-5" />
-              <span>Add Menu Item</span>
+            <Button className="w-full" variant="outline">
+              <UserCog className="mr-2 h-4 w-4" />
+              Manage Staff
             </Button>
-            <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2">
-              <Calendar className="h-5 w-5" />
-              <span>New Reservation</span>
-            </Button>
-            <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2">
-              <UserCog className="h-5 w-5" />
-              <span>Manage Staff</span>
+            <Button className="w-full" variant="outline">
+              <Utensils className="mr-2 h-4 w-4" />
+              Update Menu
             </Button>
           </CardContent>
         </Card>
