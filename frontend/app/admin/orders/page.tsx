@@ -157,53 +157,17 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="space-y-4">
-              {filteredOrders.map((order) => (
-                <div key={order.id} className="bg-white rounded-lg shadow overflow-hidden border border-gray-200 hover:shadow-md transition-shadow">
-                  <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-                    <div>
-                      <div className="flex items-center">
-                        <span className="font-medium">Order #{order.id.split('-')[0]}</span>
-                        {order.is_guest_order && (
-                          <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-yellow-100 text-yellow-800">
-                            Guest Order
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {format(new Date(order.created_at), 'MMM d, yyyy h:mm a')}
-                      </div>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {order.customer_name}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
-                    <div className="space-y-1">
-                      {order.order_items.map((item) => (
-                        <div key={item.id} className="flex justify-between">
-                          <span>{item.quantity}x {item.menu_item.name}</span>
-                          <span className="ml-4">${(item.menu_item.price * item.quantity).toFixed(2)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    ${order.total.toFixed(2)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {format(new Date(order.created_at), 'MMM d, yyyy h:mm a')}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                      order.status === 'preparing' ? 'bg-yellow-100 text-yellow-800' :
-                      order.status === 'ready' ? 'bg-blue-100 text-blue-800' :
-                      order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+      <div className="space-y-4">
+        {filteredOrders.map((order) => (
+          <div key={order.id} className="bg-white rounded-lg shadow overflow-hidden border border-gray-200 hover:shadow-md transition-shadow">
+            {/* Order Header */}
+            <div className="p-4 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row justify-between gap-2">
+              <div>
+                <div className="flex items-center">
+                  <span className="font-medium">Order #{order.id.split('-')[0]}</span>
+                  {order.is_guest_order && (
+                    <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-yellow-100 text-yellow-800">
+                      Guest Order
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
