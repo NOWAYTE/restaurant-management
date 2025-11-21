@@ -30,8 +30,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/orders`;
+    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/orders/create`;
     console.log('Forwarding to:', apiUrl);
+
+    // Log the request payload for debugging
+    console.log('Request payload:', JSON.stringify(orderData, null, 2));
 
     const response = await fetch(apiUrl, {
       method: 'POST',
