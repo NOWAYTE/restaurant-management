@@ -36,7 +36,7 @@ export default function RootLayout({
         <Providers>
           <CartProvider>
             <SocketProvider>
-            <Navigation />
+            {!isAdminRoute && <Navigation />}
             {children}
             </SocketProvider>
           </CartProvider>
