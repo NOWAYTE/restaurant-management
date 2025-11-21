@@ -9,17 +9,28 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 orders_bp = Blueprint('orders', __name__)
 
 @orders_bp.route('/', methods=['GET'])
-@jwt_required()
 def get_orders():
     try:
-        current_user_id = get_jwt_identity()
-        user = User.query.get(current_user_id)
+        # Default to showing all orders
+        orders_query = Order.query
         
-        # Admins and kitchen staff see all orders, customers only see their own
-        if user.role in ['admin', 'kitchen']:
-            orders = Order.query.order_by(Order.created_at.desc()).all()
-        else:
-            orders = Order.query.filter_by(customer_id=current_user_id).order_by(Order.created_at.desc()).all()
+        # If there's a valid JWT token, filter orders based on user role
+        try:
+            current_user_id = get_jwt_identity()
+            user = User.query.get(current_user_id)
+            
+            if user:
+                if user.role in ['admin', 'kitchen']:
+                    # Admin and kitchen staff see all orders
+                    pass
+                else:
+                    # Regular users only see their own orders
+                    orders_query = orders_query.filter(Order.customer_id == current_user_id)
+        except:
+            # No valid token, continue with showing all orders
+            pass
+            
+        orders = orders_query.order_by(Order.created_at.desc()).all()
             
         return jsonify([{
             'id': order.id,
