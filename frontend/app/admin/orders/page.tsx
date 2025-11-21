@@ -219,7 +219,7 @@ export default function OrdersPage() {
                 <p><span className="font-semibold">Phone:</span> {order.customer_phone}</p>
                 {order.customer_email && <p><span className="font-semibold">Email:</span> {order.customer_email}</p>}
                 {order.customer_address && <p><span className="font-semibold">Address:</span> {order.customer_address}</p>}
-                <p><span className="font-semibold">Total:</span> ${order.total.toFixed(2)}</p>
+                <p><span className="font-semibold">Total:</span> ${(order.total || 0).toFixed(2)}</p>
                 <p><span className="font-semibold">Status:</span> 
                   <span className={`ml-1 px-2 py-0.5 text-xs rounded-full ${
                     order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
