@@ -1,9 +1,9 @@
 // frontend/components/Cart.tsx
 'use client';
 
-import { useCart } from '@/hooks/useCart';
 import { ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
+import useCart from '@/hooks/useCart';
 
 export default function Cart() {
   const { items = [], getCartTotal } = useCart();
