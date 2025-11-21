@@ -47,8 +47,12 @@ class OrderItem(db.Model):
     price = db.Column(db.Numeric(10, 2), nullable=False)
     special_requests = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     # Relationships
+    customer = db.relationship('User', back_populates='orders', foreign_keys=[customer_id])
+    order_items = db.relationship('OrderItem', back_populates='order', cascade='all, delete-orphan')
+    
+        # Relationships
     order = db.relationship('Order', back_populates='order_items')
     menu_item = db.relationship('MenuItem', back_populates='order_items')
     
