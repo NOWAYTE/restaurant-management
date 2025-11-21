@@ -1,7 +1,7 @@
 // frontend/app/menu/page.tsx
 'use client';
+import { useCart } from '@/contexts/CartContext';
 import { useState, useEffect } from 'react';
-import { useCart } from '@/hooks/useCart';
 
 interface MenuItem {
   id: number;
