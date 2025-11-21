@@ -11,8 +11,9 @@ const publicRoutes = [
   '/order',
   '/reservation',
   '/auth/(.*)',
+  '/kitchen/login',
   '/_next/(.*)',
-  '/api/auth/(.*)',
+  '/api/(.*)',
   '/favicon.ico',
 ];
 
