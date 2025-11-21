@@ -224,3 +224,8 @@ def create_order():
         db.session.rollback()
         current_app.logger.error(f'Error creating order: {str(e)}')
         return jsonify({'error': 'Failed to create order'}), 400
+
+@orders_bp.route('/test', methods=['GET'])
+def test_route():
+    print("Test endpoint hit!")  # This should appear in your Flask console
+    return jsonify({"message": "Test successful!"}), 200
