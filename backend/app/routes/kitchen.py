@@ -8,7 +8,6 @@ from sqlalchemy import func
 kitchen_bp = Blueprint('kitchen', __name__)
 
 @kitchen_bp.route('/orders', methods=['GET'])
-@jwt_required()
 def get_kitchen_orders():
     try:
         # Get all orders that are not completed or cancelled
