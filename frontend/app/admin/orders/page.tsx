@@ -35,14 +35,32 @@ export default function OrdersPage() {
 
   // Log component mount and session changes
   useEffect(() => {
-    console.log('=== Orders Page Mounted ===');
-    console.log('Session status:', status);
-    console.log('Session data:', session);
-    
-    return () => {
-      console.log('=== Orders Page Unmounted ===');
-    };
-  }, []);
+    if (!session) return;
+    fetchOrders();
+  }, [session]);
+
+  const fetchOrders = async () => {
+    if (!session?.accessToken) return;
+
+    try {
+      const response = await fetch('/api/orders', { // use relative URL if possible
+        headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.accessToken}`,
+      }
+    });
+
+    if (!response.ok) throw new Error('Failed to fetch orders');
+
+    const data = await response.json();
+    setOrders(data);
+    setError(null);
+  } catch (err: any) {
+    setError(err.message);
+  } finally {
+    setIsLoading(false);
+  }
+  };
 
   // Fetch orders from Flask backend
   useEffect(() => {
@@ -50,10 +68,11 @@ export default function OrdersPage() {
     console.log('Session exists:', !!session);
     console.log('Session token exists:', !!session?.accessToken);
     
-    if (!session) {
-      console.log('No session found, aborting fetch');
-      return;
-    }
+    console.log('Session data:', {
+      hasSession: !!session,
+      hasToken: !!(session as any)?.accessToken,
+      sessionKeys: session ? Object.keys(session) : 'no session'
+    });
     
     if (!session.accessToken) {
       const errorMsg = 'No access token found. Please sign in again.';
