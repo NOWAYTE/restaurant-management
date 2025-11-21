@@ -52,12 +52,13 @@ export default function OrdersPage() {
 
     const fetchOrders = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:5000/api/orders/', {
+        const response = await fetch('http://127.0.0.1:5000/api/orders', {
           signal: controller.signal,
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${session.accessToken}`,
           },
+          credentials: 'include'
         });
 
         if (!response.ok) throw new Error(`Failed to fetch orders: ${response.status}`);
@@ -99,6 +100,7 @@ export default function OrdersPage() {
             Authorization: `Bearer ${session.accessToken}`,
           },
           body: JSON.stringify({ status: newStatus }),
+          credentials: 'include'
         }
       );
 
