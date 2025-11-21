@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import Link from 'next/link';
 import { format } from 'date-fns';
 
 interface Order {
@@ -33,122 +32,98 @@ export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const fetchOrders = async () => {
-    try {
-      if (!session) {
-        console.error('No active session');
+  // Fetch orders from Flask backend
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (!session?.accessToken) {
+        console.warn('No access token yet');
         return;
       }
-      
-      console.log('Fetching orders with token:', session?.accessToken);
-      const response = await fetch('/api/orders', {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.accessToken}`,
-        },
-        cache: 'no-store'
-      });
-      
-      console.log('Response status:', response.status);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-        throw new Error(`Failed to fetch orders: ${response.status} ${response.statusText}`);
+
+      try {
+        setIsLoading(true);
+
+        const response = await fetch('http://127.0.0.1:5000/api/orders/', {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+        });
+
+        if (!response.ok) {
+          const text = await response.text();
+          console.error('Failed to fetch orders:', text);
+          throw new Error(`Failed to fetch orders: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        setOrders(data);
+      } catch (error: any) {
+        console.error(error);
+        alert(`Error loading orders: ${error.message}`);
+      } finally {
+        setIsLoading(false);
       }
-      
-      const data = await response.json();
-      console.log('Orders data:', data);
-      setOrders(data);
-    } catch (error) {
-      console.error('Error in fetchOrders:', error);
-      alert(`Error loading orders: ${error.message}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
 
-  useEffect(() => {
-    if (session) {
-      setIsLoading(true);
-      fetchOrders();
-    }
-  }, [session]);
+    fetchOrders();
+  }, [session?.accessToken]);
 
-  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+  // Update order status
+  const updateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
+    if (!session?.accessToken) {
+      alert('Cannot update order: missing access token');
+      return;
+    }
+
     try {
-      const response = await fetch(`/api/orders/${orderId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.accessToken}`,
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
+      const response = await fetch(
+        `http://127.0.0.1:5000/api/orders/${orderId}/status`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+          body: JSON.stringify({ status: newStatus }),
+        }
+      );
 
       if (!response.ok) {
+        const text = await response.text();
+        console.error('Failed to update order status:', text);
         throw new Error('Failed to update order status');
       }
 
       setOrders((prev) =>
         prev.map((order) =>
-          order.id === orderId
-            ? { ...order, status: newStatus as Order['status'] }
-            : order
+          order.id === orderId ? { ...order, status: newStatus } : order
         )
       );
-    } catch (error) {
-      console.error('Error updating order status:', error);
+    } catch (error: any) {
+      console.error(error);
       alert('Failed to update order status. Please try again.');
     }
   };
 
-  if (!session) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Authentication Required</h2>
-          <p className="mb-4">Please sign in to view orders</p>
-          <Link 
-            href="/auth/signin" 
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-          >
-            Sign In
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  const filteredOrders = (Array.isArray(orders) ? orders : [])
-    .filter((order) =>
-      statusFilter === 'all' ? true : order.status === statusFilter
-    )
+  // Filter + search orders
+  const filteredOrders = orders
+    .filter((order) => (statusFilter === 'all' ? true : order.status === statusFilter))
     .filter((order) => {
-      const searchLower = searchTerm.toLowerCase();
+      const term = searchTerm.toLowerCase();
       return (
-        order.customer_name.toLowerCase().includes(searchLower) ||
-        order.id.toLowerCase().includes(searchLower) ||
-        (order.customer_phone &&
-          order.customer_phone.includes(searchTerm)) ||
-        (order.customer_email &&
-          order.customer_email.toLowerCase().includes(searchLower))
+        order.customer_name.toLowerCase().includes(term) ||
+        order.id.toString().includes(term) ||
+        (order.customer_phone && order.customer_phone.includes(term)) ||
+        (order.customer_email && order.customer_email.toLowerCase().includes(term))
       );
     })
     .sort(
       (a, b) =>
-        new Date(b.created_at).getTime() -
-        new Date(a.created_at).getTime()
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
 
+  // Loading state
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -158,6 +133,7 @@ export default function OrdersPage() {
     );
   }
 
+  // No orders state
   if (!orders || orders.length === 0) {
     return (
       <div className="text-center py-12">
@@ -173,33 +149,18 @@ export default function OrdersPage() {
 
   return (
     <div className="p-6">
+      {/* Header with search + filter */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <h1 className="text-2xl font-bold">Order Management</h1>
 
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search orders..."
-              className="pl-10 pr-4 py-2 border rounded-lg w-full"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <svg
-              className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </div>
-
+          <input
+            type="text"
+            placeholder="Search orders..."
+            className="pl-10 pr-4 py-2 border rounded-lg w-full"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
           <select
             className="border rounded-lg px-4 py-2 bg-white"
             value={statusFilter}
@@ -215,12 +176,14 @@ export default function OrdersPage() {
         </div>
       </div>
 
+      {/* Orders list */}
       <div className="space-y-4">
         {filteredOrders.map((order) => (
           <div
             key={order.id}
             className="bg-white rounded-lg shadow overflow-hidden border border-gray-200 hover:shadow-md transition-shadow"
           >
+            {/* Order header */}
             <div className="p-4 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row justify-between gap-2">
               <div className="flex items-center">
                 <span className="font-medium">Order #{order.id}</span>
@@ -269,36 +232,27 @@ export default function OrdersPage() {
               </div>
             </div>
 
+            {/* Order details */}
             <div className="p-4 space-y-2">
               <p>
-                <span className="font-semibold">Customer:</span>{' '}
-                {order.customer_name}
+                <span className="font-semibold">Customer:</span> {order.customer_name}
               </p>
-
               <p>
-                <span className="font-semibold">Phone:</span>{' '}
-                {order.customer_phone}
+                <span className="font-semibold">Phone:</span> {order.customer_phone}
               </p>
-
               {order.customer_email && (
                 <p>
-                  <span className="font-semibold">Email:</span>{' '}
-                  {order.customer_email}
+                  <span className="font-semibold">Email:</span> {order.customer_email}
                 </p>
               )}
-
               {order.customer_address && (
                 <p>
-                  <span className="font-semibold">Address:</span>{' '}
-                  {order.customer_address}
+                  <span className="font-semibold">Address:</span> {order.customer_address}
                 </p>
               )}
-
               <p>
-                <span className="font-semibold">Total:</span> $
-                {order.total.toFixed(2)}
+                <span className="font-semibold">Total:</span> ${order.total.toFixed(2)}
               </p>
-
               <p>
                 <span className="font-semibold">Created:</span>{' '}
                 {format(new Date(order.created_at), 'PPpp')}
