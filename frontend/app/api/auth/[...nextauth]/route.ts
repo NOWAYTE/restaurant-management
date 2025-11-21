@@ -10,7 +10,7 @@ interface BackendUser {
   accessToken?: string;
 }
 
-export const handler = NextAuth({
+export const authOptions = {
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -18,6 +18,7 @@ export const handler = NextAuth({
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
       },
+
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           console.log('Missing credentials');
@@ -25,16 +26,18 @@ export const handler = NextAuth({
         }
 
         try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: credentials.email,
-              password: credentials.password,
-            }),
-          });
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email: credentials.email,
+                password: credentials.password,
+              }),
+            }
+          );
 
-          // Ensure JSON response
           const contentType = res.headers.get('content-type');
           if (!contentType || !contentType.includes('application/json')) {
             const text = await res.text();
@@ -51,13 +54,12 @@ export const handler = NextAuth({
 
           const userData: BackendUser = data.user || data;
 
-          // Return user object with access token
-          const user = {
+          const user: BackendUser = {
             id: userData.id.toString(),
             email: userData.email,
             name: userData.name || userData.email.split('@')[0],
             role: userData.role || 'user',
-            accessToken: userData.accessToken || '', // <--- important
+            accessToken: data.access_token || userData.accessToken || '',
           };
 
           return user;
@@ -72,23 +74,18 @@ export const handler = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        return {
-          ...token,
-          accessToken: user.accessToken, // <-- use user.accessToken from authorize()
-          user,
-        };
+        token.user = user; // full user object
+        token.accessToken = user.accessToken;
       }
-    // On subsequent calls, keep existing token
-    return token;
+      return token;
     },
-    async session({ session, token }) {
-    // Attach token and user to session
-    session.accessToken = token.accessToken;
-    session.user = token.user as any;
-    return session;
-    },
-},
 
+    async session({ session, token }) {
+      session.user = token.user as any;
+      session.accessToken = token.accessToken;
+      return session;
+    },
+  },
 
   pages: {
     signIn: '/auth/login',
@@ -97,11 +94,12 @@ export const handler = NextAuth({
 
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60,
   },
 
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === 'development',
-});
+};
 
+const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };
