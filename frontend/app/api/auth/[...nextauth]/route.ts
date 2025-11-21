@@ -70,26 +70,21 @@ export const handler = NextAuth({
   ],
 
   callbacks: {
-    // Store user info and access token in JWT
-    async jwt({ token, user }) {
-      if (user) {
+    async jwt({ token, user, account }) {
+      if (account && user) {
         return {
           ...token,
-          id: user.id,
-          role: user.role,
-          accessToken: user.accessToken,
+          accessToken: account.access_token,
+          refreshToken: account.refresh_token,
+          accessTokenExpires: account.expires_at * 1000,
+          user,
         };
       }
       return token;
     },
-
-    // Add id, role, and access token to session
     async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as string;
-        session.user.accessToken = token.accessToken as string;
-      }
+      session.accessToken = token.accessToken;
+      session.user = token.user;
       return session;
     },
   },
