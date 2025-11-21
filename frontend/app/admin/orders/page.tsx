@@ -27,6 +27,7 @@ interface Order {
 
 export default function OrdersPage() {
   const { data: session } = useSession();
+  console.log('Session token exists:', session?.accessToken);
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
