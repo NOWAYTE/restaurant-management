@@ -5,7 +5,7 @@ import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ShoppingCart } from 'lucide-react';
-import { useCart } from '@/hooks/useCart';
+import  useCart  from '@/hooks/useCart';
 import { useState } from 'react';
 
 export default function Navigation() {
