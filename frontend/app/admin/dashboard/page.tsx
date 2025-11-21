@@ -158,7 +158,11 @@ export default function AdminDashboard() {
               <ShoppingCart className="h-5 w-5" />
               <span>New Order</span>
             </Button>
-            <Button variant="outline" className="h-24 flex flex-col items-center justify-center gap-2">
+            <Button 
+              variant="outline" 
+              className="h-24 flex flex-col items-center justify-center gap-2"
+              onClick={() => router.push('/admin/menu/new')}
+            >
               <Plus className="h-5 w-5" />
               <span>Add Menu Item</span>
             </Button>

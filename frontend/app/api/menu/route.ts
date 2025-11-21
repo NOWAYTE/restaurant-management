@@ -1,28 +1,33 @@
-// frontend/app/api/menu/route.ts
 import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
+import { CreateMenuItemDto } from '@/types/menu';
+
+export async function POST(request: Request) {
+  try {
+    const body: CreateMenuItemDto = await request.json();
+    
+    const menuItem = await prisma.menuItem.create({
+      data: {
+        ...body,
+        isAvailable: true,
+      },
+    });
+
+    return NextResponse.json(menuItem);
+  } catch (error) {
+    console.error('Error creating menu item:', error);
+    return new NextResponse('Internal Server Error', { status: 500 });
+  }
+}
 
 export async function GET() {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-    const response = await fetch(`${apiUrl}/menu`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      // Don't cache the response
-      cache: 'no-store',
+    const menuItems = await prisma.menuItem.findMany({
+      orderBy: { createdAt: 'desc' },
     });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch menu');
-    }
-
-    const data = await response.json();
-    return NextResponse.json(data);
+    return NextResponse.json(menuItems);
   } catch (error) {
-    console.error('Error in API route:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch menu' },
-      { status: 500 }
-    );
+    console.error('Error fetching menu items:', error);
+    return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
