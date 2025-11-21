@@ -1,7 +1,8 @@
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask import request
 from flask_jwt_extended import decode_token
-from .models import db, Order
+from .extensions import db
+from .models import Order
 import os
 
 socketio = SocketIO(cors_allowed_origins="*")
