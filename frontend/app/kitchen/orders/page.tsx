@@ -60,7 +60,7 @@ useEffect(() => {
 
     const fetchOrders = async () => {
       try {
-        const res = await fetch('/api/kitchen/orders');
+        const res = await fetch('http://127.0.0.1:5000/api/orders/kitchen');
         if (!res.ok) throw new Error('Failed to fetch orders');
         const data = await res.json();
         setOrders(data);
@@ -79,7 +79,7 @@ useEffect(() => {
 
   const updateOrderStatus = async (orderId: string, status: Order['status']) => {
     try {
-      const res = await fetch(`/api/kitchen/orders/${orderId}`, {
+      const res = await fetch(`http://127.0.0.1:5000/api/orders/kitchen/${orderId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
