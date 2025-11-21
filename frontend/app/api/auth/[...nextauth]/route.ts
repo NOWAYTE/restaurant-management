@@ -12,13 +12,13 @@ interface BackendUser {
 
 export const authOptions = {
   providers: [
+    // Existing email/password provider
     CredentialsProvider({
-      name: 'Credentials',
+      name: 'credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
       },
-
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           console.log('Missing credentials');
@@ -39,7 +39,7 @@ export const authOptions = {
           );
 
           const contentType = res.headers.get('content-type');
-          if (!contentType || !contentType.includes('application/json')) {
+          if (!contentType?.includes('application/json')) {
             const text = await res.text();
             console.error('Non-JSON response:', text);
             throw new Error('Invalid response from server');
@@ -52,21 +52,47 @@ export const authOptions = {
             throw new Error(data.error || 'Login failed');
           }
 
-          const userData: BackendUser = data.user || data;
-
-          const user: BackendUser = {
+          const userData = data.user || data;
+          return {
             id: userData.id.toString(),
             email: userData.email,
             name: userData.name || userData.email.split('@')[0],
             role: userData.role || 'user',
-            accessToken: data.access_token || userData.accessToken || '',
+            accessToken: data.access_token || userData.accessToken,
           };
-
-          return user;
         } catch (error) {
           console.error('Auth error:', error);
           return null;
         }
+      },
+    }),
+    // Kitchen code provider
+    CredentialsProvider({
+      id: 'kitchen',
+      name: 'Kitchen',
+      credentials: {
+        code: { label: 'Kitchen Code', type: 'password' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.code) {
+          console.log('Missing kitchen code');
+          return null;
+        }
+
+        // In a real app, validate the kitchen code against your backend
+        const KITCHEN_CODE = process.env.KITCHEN_CODE || 'kitchen123';
+        
+        if (credentials.code !== KITCHEN_CODE) {
+          console.log('Invalid kitchen code');
+          return null;
+        }
+
+        return {
+          id: 'kitchen',
+          email: 'kitchen@restaurant.com',
+          name: 'Kitchen Staff',
+          role: 'kitchen',
+        };
       },
     }),
   ],
@@ -74,30 +100,29 @@ export const authOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.user = user; // full user object
-        token.accessToken = user.accessToken;
+        token.user = user;
       }
       return token;
     },
-
     async session({ session, token }) {
-      session.user = token.user as any;
-      session.accessToken = token.accessToken;
+      if (token.user) {
+        session.user = token.user as any;
+      }
       return session;
     },
   },
 
   pages: {
     signIn: '/auth/login',
-    error: '/auth/unauthorized',
+    error: '/auth/login',
   },
 
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60,
+    maxAge: 8 * 60 * 60, // 8 hours
   },
 
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || 'your-secret-key',
   debug: process.env.NODE_ENV === 'development',
 };
 
