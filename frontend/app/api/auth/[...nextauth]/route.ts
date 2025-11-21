@@ -45,6 +45,13 @@ async authorize(credentials) {
       throw new Error(data.error || 'Login failed');
     }
 
+    console.log('Login response data:', {
+      id: data.id,
+      email: data.email,
+      role: data.role,
+      fullResponse: data
+    });
+
     console.log('User authenticated:', { id: data.id, email: data.email });
     return {
       id: data.id,
@@ -61,16 +68,20 @@ async authorize(credentials) {
   ],
   callbacks: {
     async jwt({ token, user }) {
+      console.log('JWT callback - user:', user);
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        console.log('JWT token updated with user data:', { id: token.id, role: token.role });
       }
       return token;
     },
     async session({ session, token }) {
+      console.log('Session callback - token:', token);
       if (session?.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
+        console.log('Session updated with user data:', { id: session.user.id, role: session.user.role });
       }
       return session;
     }
