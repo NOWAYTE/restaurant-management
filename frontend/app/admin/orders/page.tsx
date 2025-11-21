@@ -42,6 +42,11 @@ export default function OrdersPage() {
             Authorization: `Bearer ${session?.accessToken}`,
           },
         });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch orders');
+        }
+        
         const data = await response.json();
         setOrders(data);
       } catch (error) {
@@ -51,7 +56,9 @@ export default function OrdersPage() {
       }
     };
 
-    if (session) fetchOrders();
+    if (session) {
+      fetchOrders();
+    }
   }, [session]);
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
@@ -65,17 +72,20 @@ export default function OrdersPage() {
         body: JSON.stringify({ status: newStatus }),
       });
 
-      if (response.ok) {
-        setOrders((prev) =>
-          prev.map((order) =>
-            order.id === orderId
-              ? { ...order, status: newStatus as Order['status'] }
-              : order
-          )
-        );
+      if (!response.ok) {
+        throw new Error('Failed to update order status');
       }
+
+      setOrders((prev) =>
+        prev.map((order) =>
+          order.id === orderId
+            ? { ...order, status: newStatus as Order['status'] }
+            : order
+        )
+      );
     } catch (error) {
       console.error('Error updating order status:', error);
+      alert('Failed to update order status. Please try again.');
     }
   };
 
@@ -124,7 +134,6 @@ export default function OrdersPage() {
 
   return (
     <div className="p-6">
-      {/* Filters */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <h1 className="text-2xl font-bold">Order Management</h1>
 
@@ -167,20 +176,15 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      {/* Orders */}
       <div className="space-y-4">
         {filteredOrders.map((order) => (
           <div
             key={order.id}
             className="bg-white rounded-lg shadow overflow-hidden border border-gray-200 hover:shadow-md transition-shadow"
           >
-            {/* Header */}
             <div className="p-4 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row justify-between gap-2">
               <div className="flex items-center">
-                <span className="font-medium">
-                  Order #{order.id.split('-')[0]}
-                </span>
-
+                <span className="font-medium">Order #{order.id}</span>
                 {order.is_guest_order && (
                   <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-yellow-100 text-yellow-800">
                     Guest Order
@@ -188,23 +192,18 @@ export default function OrdersPage() {
                 )}
               </div>
 
-              {/* Status Buttons */}
               <div className="flex justify-end space-x-2 text-sm font-medium">
                 {order.status === 'pending' && (
                   <>
                     <button
-                      onClick={() =>
-                        updateOrderStatus(order.id, 'preparing')
-                      }
+                      onClick={() => updateOrderStatus(order.id, 'preparing')}
                       className="text-yellow-600 hover:text-yellow-900"
                     >
                       Start Preparing
                     </button>
                     <button
-                      onClick={() =>
-                        updateOrderStatus(order.id, 'cancelled')
-                      }
-                      className="text-red-600 hover:text-red-900"
+                      onClick={() => updateOrderStatus(order.id, 'cancelled')}
+                      className="text-red-600 hover:text-red-900 ml-2"
                     >
                       Cancel
                     </button>
@@ -213,9 +212,7 @@ export default function OrdersPage() {
 
                 {order.status === 'preparing' && (
                   <button
-                    onClick={() =>
-                      updateOrderStatus(order.id, 'ready')
-                    }
+                    onClick={() => updateOrderStatus(order.id, 'ready')}
                     className="text-blue-600 hover:text-blue-900"
                   >
                     Mark as Ready
@@ -224,9 +221,7 @@ export default function OrdersPage() {
 
                 {order.status === 'ready' && (
                   <button
-                    onClick={() =>
-                      updateOrderStatus(order.id, 'completed')
-                    }
+                    onClick={() => updateOrderStatus(order.id, 'completed')}
                     className="text-green-600 hover:text-green-900"
                   >
                     Complete Order
@@ -235,8 +230,7 @@ export default function OrdersPage() {
               </div>
             </div>
 
-            {/* Body */}
-            <div className="p-4 space-y-1">
+            <div className="p-4 space-y-2">
               <p>
                 <span className="font-semibold">Customer:</span>{' '}
                 {order.customer_name}
@@ -270,13 +264,25 @@ export default function OrdersPage() {
                 <span className="font-semibold">Created:</span>{' '}
                 {format(new Date(order.created_at), 'PPpp')}
               </p>
+
+              <div className="mt-2">
+                <p className="font-semibold">Items:</p>
+                <ul className="list-disc pl-5">
+                  {order.order_items.map((item) => (
+                    <li key={item.id}>
+                      {item.quantity}x {item.menu_item?.name || 'Unknown Item'} - $
+                      {item.price.toFixed(2)} each
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
         ))}
 
         {filteredOrders.length === 0 && (
           <div className="text-center py-8 text-gray-500">
-            No orders found
+            No orders match your search criteria
           </div>
         )}
       </div>

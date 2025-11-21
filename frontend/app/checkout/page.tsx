@@ -59,7 +59,7 @@ export default function CheckoutPage() {
 
       // Clear cart and redirect to success page
       clearCart();
-      router.push('/order/success');
+      router.push('/orders/success');
     } catch (error) {
       console.error('Error placing order:', error);
       alert(`Failed to place order: ${error.message || 'Please try again.'}`);
