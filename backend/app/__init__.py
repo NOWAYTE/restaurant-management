@@ -67,13 +67,13 @@ def create_app():
     from app.routes.orders import orders_bp
     from app.routes.dashboard import dashboard_bp
 
-    
+
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(customer_bp, url_prefix='/api/customer')
     app.register_blueprint(kitchen_bp, url_prefix='/api/kitchen')
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
     app.register_blueprint(orders_bp, url_prefix='/api/orders')
-    app.register_blueprint(dashboard.dashboard_bp)
+    app.register_blueprint(dashboard_bp, url_prefix='/api')
 
 
     # Register blueprints
