@@ -134,23 +134,43 @@ def update_order_status(order_id):
         return jsonify({'error': 'Failed to update order status'}), 500
 
 @orders_bp.route('/create', methods=['POST'])
-@jwt_required()
 def create_order():
     try:
-        current_user_id = get_jwt_identity()
         data = request.get_json()
         
-        # Get user details
-        user = User.query.get(current_user_id)
-        if not user:
-            return jsonify({'error': 'User not found'}), 404
-            
-        order = Order(
-            customer_name=user.name,
-            customer_id=user.id,
-            status='pending',
-            table_number=data.get('table_number')
-        )
+        # Check if this is a guest order or authenticated user
+        is_guest = data.get('is_guest_order', True)
+        
+        if is_guest:
+            # Handle guest order
+            if not all(key in data for key in ['customer_name', 'customer_phone']):
+                return jsonify({'error': 'Name and phone are required for guest orders'}), 400
+                
+            order = Order(
+                customer_name=data['customer_name'],
+                customer_phone=data['customer_phone'],
+                customer_email=data.get('customer_email'),
+                customer_address=data.get('customer_address'),
+                status='pending',
+                table_number=data.get('table_number', 1),
+                is_guest_order=True
+            )
+        else:
+            # Handle authenticated user order
+            current_user_id = get_jwt_identity()
+            user = User.query.get(current_user_id)
+            if not user:
+                return jsonify({'error': 'User not found'}), 404
+                
+            order = Order(
+                customer_name=user.name,
+                customer_id=user.id,
+                customer_phone=data.get('customer_phone', ''),
+                customer_email=user.email,
+                status='pending',
+                table_number=data.get('table_number', 1),
+                is_guest_order=False
+            )
         db.session.add(order)
         db.session.flush()  # Get the order ID
         
@@ -160,11 +180,14 @@ def create_order():
             if not menu_item:
                 continue
                 
+            # Use provided price if available, otherwise use menu item price
+            item_price = item.get('price', menu_item.price)
+            
             order_item = OrderItem(
                 order_id=order.id,
                 menu_item_id=item['menu_item_id'],
                 quantity=item['quantity'],
-                price=menu_item.price,
+                price=item_price,
                 special_requests=item.get('special_requests', '')
             )
             db.session.add(order_item)
