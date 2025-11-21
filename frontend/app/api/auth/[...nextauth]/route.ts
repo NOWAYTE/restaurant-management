@@ -10,25 +10,53 @@ const handler = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" }
       },
-      async authorize(credentials) {
-        try {
-          const res = await fetch(`${process.env.NEXTAUTH_URL}/api/auth/login`, {
-            method: 'POST',
-            body: JSON.stringify(credentials),
-            headers: { "Content-Type": "application/json" }
-          });
 
-          const user = await res.json();
+      // app/api/auth/[...nextauth]/route.ts
+async authorize(credentials) {
+  if (!credentials?.email || !credentials?.password) {
+    console.log('Missing credentials');
+    return null;
+  }
 
-          if (res.ok && user) {
-            return user;
-          }
-          return null;
-        } catch (error) {
-          console.error('Auth error:', error);
-          return null;
-        }
-      }
+  try {
+    const res = await fetch(`${process.env.NEXTAUTH_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: credentials.email,
+        password: credentials.password,
+      }),
+    });
+
+    // Handle non-JSON responses
+    const contentType = res.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await res.text();
+      console.error('Non-JSON response:', text);
+      throw new Error('Invalid response from server');
+    }
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      console.error('Login failed:', data);
+      throw new Error(data.error || 'Login failed');
+    }
+
+    console.log('User authenticated:', { id: data.id, email: data.email });
+    return {
+      id: data.id,
+      email: data.email,
+      name: data.name,
+      role: data.role,
+    };
+  } catch (error) {
+    console.error('Auth error:', error);
+    return null;
+  }
+}
     })
   ],
   callbacks: {
