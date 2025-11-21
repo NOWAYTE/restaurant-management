@@ -35,12 +35,12 @@ export default function OrdersPage() {
 
   // Fetch orders from Flask backend
   useEffect(() => {
-    if (!session) return;
-    if (!session.accessToken) {
-      setError('No access token found. Please sign in again.');
-      setIsLoading(false);
-      return;
-    }
+    console.log('Session data:', {
+    hasSession: !!session,
+    hasToken: !!(session as any)?.accessToken,
+    sessionKeys: session ? Object.keys(session) : 'no session'
+    });
+    }, [session]);
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
