@@ -2,6 +2,7 @@
 from datetime import datetime
 from app.extensions import db
 
+
 class Order(db.Model):
     __tablename__ = 'orders'
     
@@ -19,6 +20,7 @@ class Order(db.Model):
     notes = db.Column(db.Text, nullable=True)
     
     # Relationships
+    customer = db.relationship('User', back_populates='orders')
     order_items = db.relationship('OrderItem', back_populates='order', cascade='all, delete-orphan')
     
     def to_dict(self):
@@ -37,6 +39,7 @@ class Order(db.Model):
             'items': [item.to_dict() for item in self.order_items] if self.order_items else []
         }
 
+
 class OrderItem(db.Model):
     __tablename__ = 'order_items'
     
@@ -47,12 +50,8 @@ class OrderItem(db.Model):
     price = db.Column(db.Numeric(10, 2), nullable=False)
     special_requests = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    # Relationships
-    customer = db.relationship('User', back_populates='orders', foreign_keys=[customer_id])
-    order_items = db.relationship('OrderItem', back_populates='order', cascade='all, delete-orphan')
     
-        # Relationships
+    # Relationships
     order = db.relationship('Order', back_populates='order_items')
     menu_item = db.relationship('MenuItem', back_populates='order_items')
     
