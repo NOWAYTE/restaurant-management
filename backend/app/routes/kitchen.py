@@ -27,9 +27,7 @@ def get_kitchen_orders():
                         'name': item.menu_item.name if item.menu_item else 'Unknown Item',
                         'quantity': item.quantity,
                         'specialRequests': item.special_requests,
-                        'estimatedTime': (
-                            item.menu_item.preparation_time if item.menu_item else 15
-                        )
+                        'estimatedTime': 15  # Default preparation time in minutes
                     }
                     for item in order.order_items
                 ]
