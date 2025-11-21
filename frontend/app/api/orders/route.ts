@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/orders`;
+    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/orders`;
     console.log('Forwarding to:', apiUrl);
 
     const response = await fetch(apiUrl, {
