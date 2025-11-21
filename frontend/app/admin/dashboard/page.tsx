@@ -3,6 +3,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 import { useEffect } from 'react';
+import { DollarSign } from "lucide-react";
+
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
