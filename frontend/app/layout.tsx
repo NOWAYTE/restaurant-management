@@ -3,10 +3,11 @@
 import { usePathname } from 'next/navigation';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { Providers } from './providers';
+
 import { CartProvider } from '@/contexts/CartContext';
 import { SocketProvider } from '@/contexts/SocketContext';
 import Navigation from '@/components/Navigation';
+import { Providers } from './provider';
 
 const inter = Inter({ subsets: ['latin'] });
 
