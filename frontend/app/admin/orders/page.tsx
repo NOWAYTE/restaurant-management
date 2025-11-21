@@ -33,14 +33,35 @@ export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Log component mount and session changes
+  useEffect(() => {
+    console.log('=== Orders Page Mounted ===');
+    console.log('Session status:', status);
+    console.log('Session data:', session);
+    
+    return () => {
+      console.log('=== Orders Page Unmounted ===');
+    };
+  }, []);
+
   // Fetch orders from Flask backend
-    useEffect(() => {
-      if (!session) return;
-      if (!session.accessToken) {
-        setError('No access token found. Please sign in again.');
-        setIsLoading(false);
-        return;
-      }
+  useEffect(() => {
+    console.log('=== Fetch Orders Effect Triggered ===');
+    console.log('Session exists:', !!session);
+    console.log('Session token exists:', !!session?.accessToken);
+    
+    if (!session) {
+      console.log('No session found, aborting fetch');
+      return;
+    }
+    
+    if (!session.accessToken) {
+      const errorMsg = 'No access token found. Please sign in again.';
+      console.error(errorMsg);
+      setError(errorMsg);
+      setIsLoading(false);
+      return;
+    }
       console.log('Session data:', {
     hasSession: !!session,
     hasToken: !!(session as any)?.accessToken,
@@ -48,11 +69,21 @@ export default function OrdersPage() {
     });
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(() => {
+      console.warn('Request timeout after 10 seconds');
+      controller.abort();
+    }, 10000);
 
     const fetchOrders = async () => {
+      const startTime = performance.now();
+      console.log('Starting to fetch orders...');
+      
       try {
-        const response = await fetch('http://127.0.0.1:5000/api/orders', {
+        const url = 'http://127.0.0.1:5000/api/orders';
+        console.log('Making request to:', url);
+        console.log('Using token:', session.accessToken ? 'Token exists' : 'No token');
+        
+        const response = await fetch(url, {
           signal: controller.signal,
           headers: {
             'Content-Type': 'application/json',
@@ -60,17 +91,43 @@ export default function OrdersPage() {
           },
           credentials: 'include'
         });
+        
+        console.log('Response status:', response.status, response.statusText);
 
-        if (!response.ok) throw new Error(`Failed to fetch orders: ${response.status}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Error response:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorText
+          });
+          throw new Error(`Failed to fetch orders: ${response.status} - ${response.statusText}`);
+        }
 
         const data = await response.json();
+        console.log('Received orders data:', {
+          count: data?.length || 0,
+          firstItem: data?.[0] || 'No items'
+        });
+        
         setOrders(data);
         setError(null);
+        console.log(`Orders fetched successfully in ${(performance.now() - startTime).toFixed(2)}ms`);
       } catch (error: any) {
+        console.error('Error in fetchOrders:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        });
+        
         if (error.name === 'AbortError') {
-          setError('Request timed out. Please check your connection and try again.');
+          const errorMsg = 'Request timed out. Please check your connection and try again.';
+          console.error(errorMsg);
+          setError(errorMsg);
         } else {
-          setError(`Error loading orders: ${error.message}`);
+          const errorMsg = `Error loading orders: ${error.message}`;
+          console.error(errorMsg);
+          setError(errorMsg);
         }
       } finally {
         setIsLoading(false);
