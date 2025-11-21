@@ -1,43 +1,82 @@
-# backend/app/routes/kitchen.py
-from flask import Blueprint, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
-from app.models.order import Order, OrderItem
+from flask import Blueprint, jsonify, request
 from app.extensions import db
+from app.models import Order, OrderItem, MenuItem
+from datetime import datetime
+from flask_jwt_extended import jwt_required
+from sqlalchemy import func
 
 kitchen_bp = Blueprint('kitchen', __name__)
 
 @kitchen_bp.route('/orders', methods=['GET'])
 @jwt_required()
 def get_kitchen_orders():
-    # Only return orders that are not yet completed
-    orders = Order.query.filter(
-        Order.status.in_(['pending', 'confirmed', 'preparing'])
-    ).order_by(Order.created_at.asc()).all()
-    
-    return jsonify([order.to_dict() for order in orders])
+    try:
+        # Get all orders that are not completed or cancelled
+        orders = Order.query.filter(
+            Order.status.in_(['pending', 'preparing', 'ready'])
+        ).order_by(Order.created_at.asc()).all()
 
-@kitchen_bp.route('/orders/<int:order_id>/status', methods=['PATCH'])
+        return jsonify([{
+            'id': order.id,
+            'tableNumber': order.table_number,
+            'status': order.status,
+            'createdAt': order.created_at.isoformat() if order.created_at else None,
+            'items': [{
+                'id': item.id,
+                'name': item.menu_item.name if item.menu_item else 'Unknown Item',
+                'quantity': item.quantity,
+                'specialRequests': item.special_requests,
+                'estimatedTime': item.menu_item.preparation_time if item.menu_item else 15
+            } for item in order.order_items]
+        } for order in orders]), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@kitchen_bp.route('/orders/<int:order_id>/status', methods=['PUT'])
 @jwt_required()
 def update_order_status(order_id):
-    order = Order.query.get_or_404(order_id)
-    data = request.get_json()
-    
-    valid_statuses = ['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled']
-    new_status = data.get('status')
-    
-    if new_status not in valid_statuses:
-        return jsonify({'error': 'Invalid status'}), 400
-    
-    order.status = new_status
-    db.session.commit()
-    
-    # Here you could emit a socket.io event to update all connected clients
-    # socketio.emit('order_updated', order.to_dict())
-    
-    return jsonify(order.to_dict())
+    try:
+        data = request.get_json()
+        new_status = data.get('status')
+        
+        if new_status not in ['preparing', 'ready']:
+            return jsonify({'error': 'Invalid status'}), 400
 
-@kitchen_bp.route('/inventory', methods=['GET'])
+        order = Order.query.get_or_404(order_id)
+        order.status = new_status
+        order.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Order status updated',
+            'order': {
+                'id': order.id,
+                'status': order.status
+            }
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@kitchen_bp.route('/stats', methods=['GET'])
 @jwt_required()
-def get_inventory():
-    # Add inventory management logic here
-    return jsonify({'message': 'Inventory endpoint'})
+def get_kitchen_stats():
+    try:
+        # Count orders by status
+        status_counts = db.session.query(
+            Order.status,
+            func.count(Order.id)
+        ).filter(
+            Order.status.in_(['pending', 'preparing', 'ready'])
+        ).group_by(Order.status).all()
+
+        # Calculate average preparation time (in minutes)
+        # This is a simplified example - you might want to track actual preparation times
+        avg_prep_time = 15  # Default value
+        
+        return jsonify({
+            'statusCounts': dict(status_counts),
+            'avgPrepTime': avg_prep_time
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
