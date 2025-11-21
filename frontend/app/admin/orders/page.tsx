@@ -230,23 +230,80 @@ export default function OrdersPage() {
                   }`}>
                     {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                   </span>
-                </p>
-                <p><span className="font-semibold">Created:</span> {format(new Date(order.created_at), 'PPpp')}</p>
-
-                <div className="mt-2">
-                  <p className="font-semibold">Items:</p>
-                  <ul className="list-disc pl-5">
-                    {order.order_items.map((item) => (
-                      <li key={item.id}>
-                        {item.quantity}x {item.menu_item?.name || 'Unknown Item'} - ${item.price.toFixed(2)} each
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {order.status === 'pending' && (
+                  <>
+                    <button
+                      onClick={() => updateOrderStatus(order.id, 'preparing')}
+                      className="px-3 py-1 text-sm bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200"
+                    >
+                      Start Preparing
+                    </button>
+                    <button
+                      onClick={() => updateOrderStatus(order.id, 'cancelled')}
+                      className="px-3 py-1 text-sm bg-red-100 text-red-800 rounded hover:bg-red-200"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                )}
+                {order.status === 'preparing' && (
+                  <button
+                    onClick={() => updateOrderStatus(order.id, 'ready')}
+                    className="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded hover:bg-blue-200"
+                  >
+                    Mark as Ready
+                  </button>
+                )}
+                {order.status === 'ready' && (
+                  <button
+                    onClick={() => updateOrderStatus(order.id, 'completed')}
+                    className="px-3 py-1 text-sm bg-green-100 text-green-800 rounded hover:bg-green-200"
+                  >
+                    Complete Order
+                  </button>
+                )}
               </div>
             </div>
-          ))}
-        </div>
+
+            <div className="p-4 space-y-2">
+              <p><span className="font-semibold">Customer:</span> {order.customer_name}</p>
+              <p><span className="font-semibold">Phone:</span> {order.customer_phone}</p>
+              {order.customer_email && <p><span className="font-semibold">Email:</span> {order.customer_email}</p>}
+              {order.customer_address && <p><span className="font-semibold">Address:</span> {order.customer_address}</p>}
+              <p><span className="font-semibold">Total:</span> ${(order.total || 0).toFixed(2)}</p>
+              <p><span className="font-semibold">Status:</span> 
+                <span className={`ml-1 px-2 py-0.5 text-xs rounded-full ${
+                  order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                  order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
+                  order.status === 'ready' ? 'bg-green-100 text-green-800' :
+                  order.status === 'completed' ? 'bg-gray-100 text-gray-800' :
+                  'bg-red-100 text-red-800'
+                }`}>
+                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                </span>
+              </p>
+              <p><span className="font-semibold">Created:</span> {format(new Date(order.created_at), 'PPpp')}</p>
+
+              <div className="mt-2">
+                <p className="font-semibold">Items:</p>
+                <ul className="list-disc pl-5">
+                  {(order.order_items || []).map((item) => (
+                    <li key={item.id}>
+                      {item.quantity}x {item.menu_item?.name || 'Unknown Item'} - ${(item.price || 0).toFixed(2)} each
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+);
       )}
     </div>
   );
