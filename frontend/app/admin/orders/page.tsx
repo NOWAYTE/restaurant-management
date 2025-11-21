@@ -37,7 +37,7 @@ export default function OrdersPage() {
     const fetchOrders = async () => {
   try {
     console.log('Fetching orders...');
-    const response = await fetch('/api/orders', {
+    const response = await fetch('/api/orders/', {  // Added trailing slash
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${session?.accessToken}`,
