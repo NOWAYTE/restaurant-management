@@ -34,13 +34,18 @@ export default function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Fetch orders from Flask backend
-  useEffect(() => {
-    console.log('Session data:', {
+    useEffect(() => {
+      if (!session) return;
+      if (!session.accessToken) {
+        setError('No access token found. Please sign in again.');
+        setIsLoading(false);
+        return;
+      }
+      console.log('Session data:', {
     hasSession: !!session,
     hasToken: !!(session as any)?.accessToken,
     sessionKeys: session ? Object.keys(session) : 'no session'
     });
-    }, [session]);
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -78,7 +83,7 @@ export default function OrdersPage() {
       clearTimeout(timeoutId);
       controller.abort();
     };
-  }, [session?.accessToken]);
+  }, [session]);
 
   // Update order status
   const updateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
