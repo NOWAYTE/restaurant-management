@@ -1,92 +1,60 @@
-'use client';
-
-import { useState, useEffect } from 'react';
+// frontend/hooks/useCart.ts
+import { create } from 'zustand';
 
 interface CartItem {
-  id: number;
+  id: string;
   name: string;
   price: number;
   quantity: number;
-  specialRequests?: string;
+  size?: string;
 }
 
-export const useCart = () => {
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [isInitialized, setIsInitialized] = useState(false);
+interface CartStore {
+  items: CartItem[];
+  addToCart: (item: Omit<CartItem, 'quantity'>) => void;
+  removeFromCart: (id: string, size?: string) => void;
+  updateQuantity: (id: string, quantity: number, size?: string) => void;
+  clearCart: () => void;
+  getCartTotal: () => number;
+}
 
-  // Load cart from localStorage on initial render
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedCart = localStorage.getItem('cart');
-      if (savedCart) {
-        setCart(JSON.parse(savedCart));
-      }
-      setIsInitialized(true);
-    }
-  }, []);
-
-  // Save cart to localStorage whenever it changes
-  useEffect(() => {
-    if (isInitialized && typeof window !== 'undefined') {
-      localStorage.setItem('cart', JSON.stringify(cart));
-    }
-  }, [cart, isInitialized]);
-
-  const addToCart = (item: Omit<CartItem, 'quantity'>, quantity: number = 1) => {
-    setCart(prevCart => {
-      const existingItem = prevCart.find(cartItem => cartItem.id === item.id);
-      
-      if (existingItem) {
-        return prevCart.map(cartItem =>
-          cartItem.id === item.id
-            ? { ...cartItem, quantity: cartItem.quantity + quantity }
-            : cartItem
-        );
-      }
-      
-      return [...prevCart, { ...item, quantity }];
-    });
-  };
-
-  const updateQuantity = (itemId: number, newQuantity: number) => {
-    if (newQuantity <= 0) {
-      removeFromCart(itemId);
-      return;
-    }
-    
-    setCart(prevCart =>
-      prevCart.map(item =>
-        item.id === itemId ? { ...item, quantity: newQuantity } : item
-      )
+const useCart = create<CartStore>((set, get) => ({
+  items: [],
+  addToCart: (item) => {
+    const { items } = get();
+    const existingItemIndex = items.findIndex(
+      (i) => i.id === item.id && i.size === item.size
     );
-  };
 
-  const removeFromCart = (itemId: number) => {
-    setCart(prevCart => prevCart.filter(item => item.id !== itemId));
-  };
+    if (existingItemIndex >= 0) {
+      const newItems = [...items];
+      newItems[existingItemIndex].quantity += 1;
+      return set({ items: newItems });
+    }
 
-  const clearCart = () => {
-    setCart([]);
-  };
-
-  const getTotalItems = () => {
-    return cart.reduce((total, item) => total + item.quantity, 0);
-  };
-
-  const getTotalPrice = () => {
-    return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-  };
-
-  return {
-    cart,
-    addToCart,
-    updateQuantity,
-    removeFromCart,
-    clearCart,
-    getTotalItems,
-    getTotalPrice,
-    isInitialized
-  };
-};
+    return set({ items: [...items, { ...item, quantity: 1 }] });
+  },
+  removeFromCart: (id, size) => 
+    set((state) => ({
+      items: state.items.filter((item) => 
+        !(item.id === id && item.size === size)
+      ),
+    })),
+  updateQuantity: (id, quantity, size) => 
+    set((state) => ({
+      items: state.items.map((item) =>
+        item.id === id && item.size === size
+          ? { ...item, quantity }
+          : item
+      ),
+    })),
+  clearCart: () => set({ items: [] }),
+  getCartTotal: () => {
+    const { items } = get();
+    return items.reduce((total, item) => 
+      total + (item.price * item.quantity), 0
+    );
+  },
+}));
 
 export default useCart;

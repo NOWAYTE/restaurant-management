@@ -1,3 +1,4 @@
+// frontend/components/Cart.tsx
 'use client';
 
 import { useCart } from '@/hooks/useCart';
@@ -5,8 +6,8 @@ import { ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Cart() {
-  const { items, getCartTotal } = useCart();
-  const itemCount = items.reduce((total, item) => total + item.quantity, 0);
+  const { items = [], getCartTotal } = useCart();
+  const itemCount = items.reduce((total, item) => total + (item?.quantity || 0), 0);
   const total = getCartTotal();
 
   return (
@@ -20,7 +21,6 @@ export default function Cart() {
         )}
       </Link>
       
-      {/* Cart dropdown */}
       {itemCount > 0 && (
         <div className="hidden group-hover:block absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg py-1 z-50">
           <div className="px-4 py-2 border-b">
@@ -31,11 +31,11 @@ export default function Cart() {
               <div key={`${item.id}-${item.size || ''}`} className="px-4 py-2 border-b">
                 <div className="flex justify-between">
                   <span className="text-sm">{item.name}</span>
-                  <span className="text-sm font-medium">${item.price.toFixed(2)}</span>
+                  <span className="text-sm font-medium">${item.price?.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-xs text-gray-500">
                   <span>Qty: {item.quantity}</span>
-                  <span>${(item.price * item.quantity).toFixed(2)}</span>
+                  <span>${((item.price || 0) * (item.quantity || 0)).toFixed(2)}</span>
                 </div>
               </div>
             ))}
