@@ -1,71 +1,63 @@
+// frontend/app/api/orders/route.ts
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-
-export async function GET() {
-  const session = await getServerSession(authOptions);
-  
-  if (!session) {
-    return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders`, {
-      headers: {
-        'Authorization': `Bearer ${session.accessToken}`
-      }
-    });
-    
-    if (!res.ok) {
-      throw new Error('Failed to fetch orders');
-    }
-    
-    const data = await res.json();
-    return NextResponse.json(data);
-  } catch (error) {
-    return new NextResponse(
-      JSON.stringify({ error: 'Failed to fetch orders' }),
-      { status: 500 }
-    );
-  }
-}
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  
-  if (!session) {
-    return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-
   try {
-    const body = await request.json();
-    
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.accessToken}`
-      },
-      body: JSON.stringify(body)
-    });
-    
-    if (!res.ok) {
-      const error = await res.json();
-      throw new Error(error.message || 'Failed to create order');
+    const { customer, items } = await request.json();
+
+    // Basic validation
+    if (!customer?.name || !customer?.phone) {
+      return new NextResponse(
+        JSON.stringify({ error: 'Name and phone number are required' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
     }
-    
-    const data = await res.json();
-    return NextResponse.json(data);
-  } catch (error: any) {
+
+    if (!Array.isArray(items) || items.length === 0) {
+      return new NextResponse(
+        JSON.stringify({ error: 'No items in order' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Calculate total
+    const total = items.reduce((sum, item) => {
+      return sum + (item.price * item.quantity);
+    }, 0);
+
+    // Create order in database
+    const order = await prisma.order.create({
+      data: {
+        customer_name: customer.name,
+        customer_phone: customer.phone,
+        customer_email: customer.email || null,
+        customer_address: customer.address || null,
+        total,
+        status: 'pending',
+        is_guest_order: true,
+        order_items: {
+          create: items.map(item => ({
+            menu_item_id: item.menu_item_id,
+            quantity: item.quantity,
+            price: item.price
+          }))
+        }
+      },
+      include: {
+        order_items: {
+          include: {
+            menu_item: true
+          }
+        }
+      }
+    });
+
+    return NextResponse.json(order);
+  } catch (error) {
+    console.error('Error creating order:', error);
     return new NextResponse(
-      JSON.stringify({ error: error.message || 'Failed to create order' }),
-      { status: 500 }
+      JSON.stringify({ error: 'Failed to create order' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 }
