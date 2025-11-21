@@ -1,7 +1,7 @@
 // frontend/components/Cart.tsx
 'use client';
 
-import { useCart } from '@/contexts/CartContext';
+import useCart from '@/hooks/useCart';
 import { ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 

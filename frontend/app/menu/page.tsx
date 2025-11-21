@@ -1,6 +1,7 @@
 // frontend/app/menu/page.tsx
 'use client';
-import { useCart } from '@/contexts/CartContext';
+
+import useCart from '@/hooks/useCart';
 import { useState, useEffect } from 'react';
 
 interface MenuItem {
