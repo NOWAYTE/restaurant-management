@@ -44,7 +44,7 @@ export default function AdminLayout({
         </div>
         <nav className="p-2 space-y-1">
           <Link
-            href="/admin"
+            href="/admin/dashboard"
             className={`flex items-center px-4 py-2 text-sm rounded-md ${
               pathname === '/admin'
                 ? 'bg-gray-900 text-white'
