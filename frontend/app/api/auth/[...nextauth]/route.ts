@@ -45,20 +45,26 @@ async authorize(credentials) {
       throw new Error(data.error || 'Login failed');
     }
 
+    // Extract user data from the response
+    const userData = data.user || data;
+    
     console.log('Login response data:', {
-      id: data.id,
-      email: data.email,
-      role: data.role,
+      id: userData.id,
+      email: userData.email,
+      role: userData.role,
       fullResponse: data
     });
 
-    console.log('User authenticated:', { id: data.id, email: data.email });
-    return {
-      id: data.id,
-      email: data.email,
-      name: data.name,
-      role: data.role,
+    // Return the user object in the expected format
+    const user = {
+      id: userData.id.toString(),
+      email: userData.email,
+      name: userData.name || userData.email.split('@')[0],
+      role: userData.role || 'user',
     };
+
+    console.log('Returning user:', user);
+    return user;
   } catch (error) {
     console.error('Auth error:', error);
     return null;
@@ -67,12 +73,15 @@ async authorize(credentials) {
     })
   ],
   callbacks: {
-    async jwt({ token, user }) {
-      console.log('JWT callback - user:', user);
-      if (user) {
-        token.id = user.id;
-        token.role = user.role;
-        console.log('JWT token updated with user data:', { id: token.id, role: token.role });
+    async jwt({ token, user, account }) {
+      // Initial sign in
+      if (user && account) {
+        console.log('JWT initial sign in - user:', user);
+        return {
+          ...token,
+          id: user.id,
+          role: user.role || 'user',
+        };
       }
       return token;
     },
@@ -81,7 +90,10 @@ async authorize(credentials) {
       if (session?.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
-        console.log('Session updated with user data:', { id: session.user.id, role: session.user.role });
+        console.log('Session updated with user data:', { 
+          id: session.user.id, 
+          role: session.user.role 
+        });
       }
       return session;
     }
@@ -92,7 +104,10 @@ async authorize(credentials) {
   },
   session: {
     strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
+  secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === 'development',
 });
 
 export { handler as GET, handler as POST };
