@@ -1,13 +1,14 @@
 // frontend/components/Navigation.tsx
 'use client';
+
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import Cart from './Cart';
 
 export default function Navigation() {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const pathname = usePathname();
+
   const loading = status === 'loading';
 
   if (loading) return null;
@@ -53,28 +54,37 @@ export default function Navigation() {
               )}
             </div>
           </div>
-          <div className="hidden sm:ml-6 sm:flex sm:items-center space-x-4">
+          <div className="hidden sm:ml-6 sm:flex sm:items-center">
             {session ? (
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-700">
-                  {session.user.email}
-                </span>
-                <button
-                  onClick={() => signOut()}
-                  className="text-sm text-gray-700 hover:text-gray-900"
-                >
-                  Sign out
-                </button>
-              </div>
+              session.user.role !== 'admin' ? (
+                <div className="ml-4 flex items-center md:ml-6">
+                  <span className="text-sm text-gray-700 mr-4">
+                    {session.user.email}
+                  </span>
+                  <button
+                    onClick={() => signOut()}
+                    className="text-gray-500 hover:text-gray-700 text-sm font-medium"
+                  >
+                    Sign out
+                  </button>
+                </div>
+              ) : (
+                <div className="ml-4 flex items-center">
+                  <span className="text-sm font-medium text-gray-700">
+                    {session.user.role.charAt(0).toUpperCase() + session.user.role.slice(1)}
+                  </span>
+                </div>
+              )
             ) : (
-              <Link
-                href="/auth/login"
-                className="text-sm font-medium text-gray-700 hover:text-gray-900"
-              >
-                Sign in
-              </Link>
+              <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+                <Link
+                  href="/auth/login"
+                  className="text-gray-500 hover:text-gray-700 inline-flex items-center px-1 pt-1 text-sm font-medium"
+                >
+                  Sign in
+                </Link>
+              </div>
             )}
-            <Cart />
           </div>
         </div>
       </div>

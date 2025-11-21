@@ -1,159 +1,125 @@
+// frontend/app/admin/layout.tsx
 'use client';
-
-import { useSession } from 'next-auth/react';
-import { redirect, usePathname } from 'next/navigation';
+import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function AdminLayout({
-    children,
+  children,
 }: {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-    const { data: session, status } = useSession();
-    const pathname = usePathname();
+  const { data: session, status } = useSession();
+  const pathname = usePathname();
+  const router = useRouter();
 
-    // Debug logging
-    useEffect(() => {
-        console.log('Admin Layout - Session:', session);
-        console.log('Admin Layout - Status:', status);
-        console.log('Admin Layout - User Role:', session?.user?.role);
-        console.log('Admin Layout - Full Session Object:', JSON.stringify(session, null, 2));
-    }, [session, status]);
-
-    useEffect(() => {
-        if (status === 'unauthenticated') {
-            console.log('User not authenticated, redirecting to login');
-            redirect(`/auth/login?callbackUrl=${encodeURIComponent(pathname)}`);
-        } else if (status === 'authenticated' && session?.user?.role !== 'admin') {
-            console.error('Access denied - User role:', session?.user?.role);
-            redirect('/auth/unauthorized');
-        }
-    }, [status, session, pathname]);
-
-    if (status !== 'authenticated') {
-        return (
-            <div className="flex h-screen items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
-            </div>
-        );
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/login');
+    } else if (status === 'authenticated' && session?.user?.role !== 'admin') {
+      router.push('/');
     }
+  }, [status, session, router]);
 
+  if (status !== 'authenticated' || session?.user?.role !== 'admin') {
     return (
-        <div className="flex h-screen bg-gray-100">
-            {/* Sidebar */}
-            <div className="w-64 bg-gray-800 text-white">
-                <div className="p-4">
-                    <h1 className="text-2xl font-bold">Admin Panel</h1>
-                    <p className="text-sm text-gray-400">Restaurant Management</p>
-                </div>
-                <nav className="mt-6">
-                    <NavItem href="/admin/dashboard" icon="dashboard">
-                        Dashboard
-                    </NavItem>
-                    <NavItem href="/admin/menu" icon="menu">
-                        Menu Management
-                    </NavItem>
-                    <NavItem href="/admin/orders" icon="shopping-cart">
-                        Orders
-                    </NavItem>
-                    <NavItem href="/admin/reservations" icon="calendar">
-                        Reservations
-                    </NavItem> 
-                </nav>
-            </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+      </div>
+    );
+  }
 
-            {/* Main Content */}
-            <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Top Navigation */}
-                <header className="bg-white shadow-sm">
-                    <div className="flex items-center justify-between p-4">
-                        <h2 className="text-xl font-semibold text-gray-800">
-                            {getPageTitle(pathname)}
-                        </h2>
-                        {/* User menu... */}
-                    </div>
-                </header>
-
-                {/* Page Content */}
-                <main className="flex-1 overflow-y-auto bg-gray-50 p-6">
-                    {children}
-                </main>
-            </div>
+  return (
+    <div className="flex h-screen bg-gray-100">
+      {/* Sidebar */}
+      <div className="bg-gray-800 text-white w-64 flex-shrink-0">
+        <div className="p-4 border-b border-gray-700">
+          <h1 className="text-xl font-semibold">Admin Panel</h1>
+          {session?.user?.email && (
+            <p className="text-sm text-gray-300 mt-1 truncate">
+              {session.user.email}
+            </p>
+          )}
         </div>
-    );
-}
+        <nav className="p-2 space-y-1">
+          <Link
+            href="/admin"
+            className={`flex items-center px-4 py-2 text-sm rounded-md ${
+              pathname === '/admin'
+                ? 'bg-gray-900 text-white'
+                : 'text-gray-300 hover:bg-gray-700'
+            }`}
+          >
+            <svg
+              className="mr-3 h-5 w-5"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+              />
+            </svg>
+            Dashboard
+          </Link>
+          <Link
+            href="/admin/menu"
+            className={`flex items-center px-4 py-2 text-sm rounded-md ${
+              pathname.startsWith('/admin/menu')
+                ? 'bg-gray-900 text-white'
+                : 'text-gray-300 hover:bg-gray-700'
+            }`}
+          >
+            <svg
+              className="mr-3 h-5 w-5"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            Menu Management
+          </Link>
+          <button
+            onClick={() => signOut({ callbackUrl: '/' })}
+            className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white rounded-md flex items-center mt-4"
+          >
+            <svg
+              className="mr-3 h-5 w-5"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
+            </svg>
+            Sign out
+          </button>
+        </nav>
+      </div>
 
-// Add this after the AdminLayout component, before the closing export
-
-function NavItem({ href, icon, children }: {
-    href: string;
-    icon: string;
-    children: React.ReactNode
-}) {
-    const pathname = usePathname();
-    const isActive = pathname === href || pathname.startsWith(`${href}/`);
-
-    return (
-        <Link
-            href={href}
-            className={`flex items-center px-6 py-3 text-sm font-medium transition-colors ${isActive
-                    ? 'bg-gray-900 text-white'
-                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                }`}
-        >
-            <span className="mr-3">
-                <NavIcon name={icon} className="h-5 w-5" />
-            </span>
-            {children}
-        </Link>
-    );
-}
-
-function NavIcon({ name, className }: { name: string; className: string }) {
-    // Add your icon components here
-    switch (name) {
-        case 'dashboard':
-            return (
-                <svg
-                    className={className}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                >
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-                    />
-                </svg>
-            );
-        // Add more icons as needed
-        default:
-            return null;
-    }
-}
-
-function getPageTitle(pathname: string): string {
-    if (!pathname) return 'Dashboard';
-    const path = pathname.split('/').filter(Boolean);
-    if (path.length < 2) return 'Dashboard';
-
-    const page = path[1];
-    switch (page) {
-        case 'dashboard':
-            return 'Dashboard';
-        case 'users':
-            return 'User Management';
-        case 'menu':
-            return 'Menu Management';
-        case 'orders':
-            return 'Order Management';
-        case 'reservations':
-            return 'Reservation Management';
-        default:
-            return 'Admin Panel';
-    }
+      {/* Main content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
+          <div className="container mx-auto px-6 py-8">{children}</div>
+        </main>
+      </div>
+    </div>
+  );
 }
