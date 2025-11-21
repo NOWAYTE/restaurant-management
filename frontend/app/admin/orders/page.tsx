@@ -35,26 +35,33 @@ export default function OrdersPage() {
 
   useEffect(() => {
     const fetchOrders = async () => {
-      try {
-        const response = await fetch('/api/orders', {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${session?.accessToken}`,
-          },
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch orders');
-        }
-        
-        const data = await response.json();
-        setOrders(data);
-      } catch (error) {
-        console.error('Error fetching orders:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  try {
+    console.log('Fetching orders...');
+    const response = await fetch('/api/orders', {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session?.accessToken}`,
+      },
+    });
+    
+    console.log('Response status:', response.status);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Error response:', errorText);
+      throw new Error('Failed to fetch orders');
+    }
+    
+    const data = await response.json();
+    console.log('Orders data:', data);
+    setOrders(data);
+  } catch (error) {
+    console.error('Error in fetchOrders:', error);
+    alert(`Error loading orders: ${error.message}`);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
     if (session) {
       fetchOrders();
