@@ -8,7 +8,6 @@ from sqlalchemy import func
 dashboard_bp = Blueprint('dashboard', __name__)
 
 @dashboard_bp.route('/stats')
-@dashboard_bp.route('/stats')
 def get_dashboard_stats():
     try:
         # Get today's date range
@@ -16,14 +15,16 @@ def get_dashboard_stats():
         tomorrow = today + timedelta(days=1)
         
         print("Fetching today's revenue...")  # Debug log
-        # Calculate today's revenue
+        # Calculate today's revenue by joining with order_items and summing (price * quantity)
         today_revenue = db.session.query(
-            func.coalesce(func.sum(Order.total), 0)
+            func.coalesce(func.sum(OrderItem.quantity * OrderItem.price), 0)
+        ).join(
+            Order, Order.id == OrderItem.order_id
         ).filter(
             Order.status == 'completed',
             Order.created_at >= today,
             Order.created_at < tomorrow
-        ).scalar() or 0
+        ).scalar()
 
         print("Counting active orders...")  # Debug log
         # Count active orders
@@ -35,36 +36,32 @@ def get_dashboard_stats():
         # Count menu items
         menu_items = MenuItem.query.count()
 
-        print("Counting today's reservations...")  # Debug log
-        # Count today's reservations
-        today_reservations = 0  # Default to 0 if Reservation model doesn't exist
-        if 'Reservation' in globals():
-            today_reservations = Reservation.query.filter(
-                Reservation.date >= today.date(),
-                Reservation.date < tomorrow.date()
-            ).count()
-
         print("Fetching recent orders...")  # Debug log
-        # Get recent orders
-        recent_orders = Order.query.order_by(
+        # Get recent orders with their total calculated from order_items
+        recent_orders = db.session.query(
+            Order,
+            func.coalesce(func.sum(OrderItem.quantity * OrderItem.price), 0).label('order_total')
+        ).outerjoin(
+            OrderItem, Order.id == OrderItem.order_id
+        ).group_by(Order.id).order_by(
             Order.created_at.desc()
         ).limit(5).all()
 
         # Format recent orders
         formatted_orders = [{
             'id': f"#{order.id:03d}",
-            'customer': getattr(order, 'customer_name', 'Guest') or 'Guest',
-            'total': f"${float(getattr(order, 'total', 0)):.2f}",
-            'status': getattr(order, 'status', 'pending'),
-            'time': format_time_ago(getattr(order, 'created_at', datetime.utcnow()))
-        } for order in recent_orders]
+            'customer': order.customer_name or 'Guest',
+            'total': f"${float(total):.2f}",
+            'status': order.status,
+            'time': format_time_ago(order.created_at or datetime.utcnow())
+        } for order, total in recent_orders]
 
         return jsonify({
             'stats': {
                 'todayRevenue': float(today_revenue),
                 'activeOrders': active_orders,
                 'menuItems': menu_items,
-                'todayReservations': today_reservations
+                'todayReservations': 0  # Temporarily set to 0 since we don't have reservations yet
             },
             'recentOrders': formatted_orders
         })
@@ -76,8 +73,9 @@ def get_dashboard_stats():
             'type': type(e).__name__,
             'traceback': traceback.format_exc()
         }
-        print("Error in get_dashboard_stats:", error_details)  # Debug log
+        print("Error in get_dashboard_stats:", error_details)
         return jsonify(error_details), 500
+
         
 def format_time_ago(dt):
     now = datetime.utcnow()
