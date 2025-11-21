@@ -1,7 +1,6 @@
-// app/menu/page.tsx
+// frontend/app/menu/page.tsx
 'use client';
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
 import { useCart } from '@/hooks/useCart';
 
 interface MenuItem {
@@ -14,7 +13,6 @@ interface MenuItem {
 }
 
 export default function MenuPage() {
-  const { data: session } = useSession();
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,13 +30,10 @@ export default function MenuPage() {
         
         const data = await res.json();
         
-        // Ensure data is an array before setting it
         if (Array.isArray(data)) {
           setMenuItems(data);
         } else {
-          console.error('Expected array but got:', data);
-          setError('Invalid menu data format');
-          setMenuItems([]);
+          throw new Error('Invalid menu data format');
         }
       } catch (error) {
         console.error('Error fetching menu:', error);
@@ -65,11 +60,11 @@ export default function MenuPage() {
   if (error) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded" role="alert">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
           <p>Error: {error}</p>
           <button 
             onClick={() => window.location.reload()}
-            className="mt-2 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
+            className="mt-2 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
           >
             Try Again
           </button>
@@ -82,13 +77,11 @@ export default function MenuPage() {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Our Menu</h1>
       {menuItems.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-600">No menu items available.</p>
-        </div>
+        <p className="text-gray-600">No menu items available.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {menuItems.map((item) => (
-            <div key={item.id} className="border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
+            <div key={item.id} className="border rounded-lg overflow-hidden shadow-md">
               <img 
                 src={item.image_url || '/placeholder-food.jpg'} 
                 alt={item.name}
@@ -111,7 +104,7 @@ export default function MenuPage() {
                     price: item.price,
                     quantity: 1
                   })}
-                  className="mt-4 w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+                  className="mt-4 w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                 >
                   Add to Cart
                 </button>

@@ -1,15 +1,17 @@
+// frontend/components/Navigation.tsx
 'use client';
+
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useCart } from '@/contexts/CartContext';
+import Cart from './Cart';
 
 export default function Navigation() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const pathname = usePathname();
-  const { items } = useCart();
+  const loading = status === 'loading';
 
-  const cartItemCount = items.reduce((total, item) => total + item.quantity, 0);
+  if (loading) return null;
 
   return (
     <nav className="bg-white shadow-sm">
@@ -18,7 +20,7 @@ export default function Navigation() {
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
               <Link href="/" className="text-xl font-bold text-gray-900">
-                Restaurant Name
+                Restaurant
               </Link>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -32,70 +34,45 @@ export default function Navigation() {
               >
                 Menu
               </Link>
-              {session?.user.role === 'admin' && (
+              {session && (
                 <>
-                  <Link
-                    href="/admin/orders"
-                    className={`${
-                      pathname.startsWith('/admin/orders')
-                        ? 'border-blue-500 text-gray-900'
-                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                    } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
-                  >
-                    Manage Orders
-                  </Link>
-                  <Link
-                    href="/admin/users"
-                    className={`${
-                      pathname.startsWith('/admin/users')
-                        ? 'border-blue-500 text-gray-900'
-                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                    } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
-                  >
-                    Manage Users
-                  </Link>
+                  {(session.user.role === 'admin' || session.user.role === 'kitchen') && (
+                    <Link
+                      href="/kitchen"
+                      className={`${
+                        pathname === '/kitchen'
+                          ? 'border-blue-500 text-gray-900'
+                          : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                      } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+                    >
+                      Kitchen
+                    </Link>
+                  )}
+                  {session.user.role === 'admin' && (
+                    <Link
+                      href="/admin"
+                      className={`${
+                        pathname.startsWith('/admin')
+                          ? 'border-blue-500 text-gray-900'
+                          : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                      } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+                    >
+                      Admin
+                    </Link>
+                  )}
                 </>
-              )}
-              {(session?.user.role === 'kitchen' || session?.user.role === 'admin') && (
-                <Link
-                  href="/kitchen/orders"
-                  className={`${
-                    pathname.startsWith('/kitchen')
-                      ? 'border-blue-500 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                  } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
-                >
-                  Kitchen Dashboard
-                </Link>
               )}
             </div>
           </div>
-          <div className="hidden sm:ml-6 sm:flex sm:items-center">
+          <div className="hidden sm:ml-6 sm:flex sm:items-center space-x-4">
             {session ? (
               <div className="flex items-center space-x-4">
                 <span className="text-sm text-gray-700">
-                  Hello, {session.user.name}
+                  {session.user.email}
                 </span>
-                <Link
-                  href="/orders"
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  My Orders
-                </Link>
-                <Link
-                  href="/cart"
-                  className="relative text-gray-500 hover:text-gray-700"
-                >
-                  Cart
-                  {cartItemCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                      {cartItemCount}
-                    </span>
-                  )}
-                </Link>
                 <button
-                  onClick={() => signOut({ callbackUrl: '/' })}
-                  className="text-gray-500 hover:text-gray-700"
+                  onClick={() => signOut()}
+                  className="text-sm text-gray-700 hover:text-gray-900"
                 >
                   Sign out
                 </button>
@@ -103,11 +80,12 @@ export default function Navigation() {
             ) : (
               <Link
                 href="/auth/login"
-                className="text-gray-500 hover:text-gray-700"
+                className="text-sm font-medium text-gray-700 hover:text-gray-900"
               >
                 Sign in
               </Link>
             )}
+            <Cart />
           </div>
         </div>
       </div>

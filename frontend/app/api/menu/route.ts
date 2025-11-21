@@ -1,35 +1,54 @@
+// frontend/app/api/menu/route.ts
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  
-  if (!session || session.user.role !== 'admin') {
-    return new NextResponse(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
+  try {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+    const response = await fetch(`${apiUrl}/menu`, {
       headers: {
         'Content-Type': 'application/json',
       },
+      // Don't cache the response
+      cache: 'no-store',
     });
-  }
 
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/menu`, {
-      headers: {
-        'Authorization': `Bearer ${session.accessToken}`
-      }
-    });
-    
-    if (!res.ok) {
+    if (!response.ok) {
       throw new Error('Failed to fetch menu');
     }
-    
-    const data = await res.json();
+
+    const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
-    return new NextResponse(
-      JSON.stringify({ error: 'Failed to fetch menu' }),
+    console.error('Error in API route:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch menu' },
+      { status: 500 }
+    );
+  }
+}// frontend/app/api/menu/route.ts
+import { NextResponse } from 'next/server';
+
+export async function GET() {
+  try {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+    const response = await fetch(`${apiUrl}/menu`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      // Don't cache the response
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch menu');
+    }
+
+    const data = await response.json();
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error('Error in API route:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch menu' },
       { status: 500 }
     );
   }
