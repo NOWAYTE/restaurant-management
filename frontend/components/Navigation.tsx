@@ -9,7 +9,7 @@ import useCart from '@/hooks/useCart';
 import { useState } from 'react';
 
 export default function Navigation() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const pathname = usePathname();
   const { items } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -32,7 +32,7 @@ export default function Navigation() {
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
               {session && (
                 <>
-                  {(session.user.role === 'admin' || session.user.role === 'kitchen') && (
+                  {(session.user?.user?.role === 'admin' || session.user?.user?.role === 'kitchen') && (
                     <Link
                       href="/kitchen"
                       className={`${
@@ -44,7 +44,7 @@ export default function Navigation() {
                       Kitchen
                     </Link>
                   )}
-                  {session.user.role === 'admin' && (
+                  {session.user?.user?.role === 'admin' && (
                     <Link
                       href="/admin"
                       className={`${
