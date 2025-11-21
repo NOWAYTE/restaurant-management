@@ -5,22 +5,26 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { format } from 'date-fns';
 
+interface OrderItem {
+  id: number;
+  menu_item_id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  special_requests: string | null;
+}
+
 interface Order {
-  id: string;
+  id: number;
   customer_name: string;
-  customer_phone: string;
-  customer_email: string | null;
-  customer_address: string | null;
+  customer_phone?: string;
+  customer_email?: string | null;
+  customer_address?: string | null;
   status: 'pending' | 'preparing' | 'ready' | 'completed' | 'cancelled';
-  total: number;
+  total?: number;
   created_at: string;
-  is_guest_order: boolean;
-  order_items: {
-    id: string;
-    quantity: number;
-    price: number;
-    menu_item: { name: string };
-  }[];
+  is_guest_order?: boolean;
+  items: OrderItem[];
 }
 
 export default function OrdersPage() {
@@ -36,14 +40,15 @@ export default function OrdersPage() {
       try {
         const response = await fetch('http://127.0.0.1:5000/api/orders');
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to fetch orders');
+          const errData = await response.json();
+          throw new Error(errData.error || 'Failed to fetch orders.');
         }
+
         const data = await response.json();
         setOrders(data);
         setError(null);
       } catch (err: any) {
-        setError(err.message || 'An error occurred while fetching orders');
+        setError(err.message || 'Error fetching orders');
       } finally {
         setIsLoading(false);
       }
@@ -54,9 +59,9 @@ export default function OrdersPage() {
     return () => clearInterval(interval);
   }, []);
 
-  const updateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
+  const updateOrderStatus = async (orderId: number, newStatus: Order['status']) => {
     if (!session?.user?.token) {
-      setError('You need to be logged in to update orders');
+      setError('You must be logged in to update orders');
       return;
     }
 
@@ -74,15 +79,15 @@ export default function OrdersPage() {
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update order status');
+        const errData = await response.json();
+        throw new Error(errData.error || 'Failed to update order.');
       }
 
       setOrders((prev) =>
         prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
       );
     } catch (err: any) {
-      setError(err.message || 'Failed to update order status');
+      setError(err.message || 'Failed to update order');
     }
   };
 
@@ -93,7 +98,7 @@ export default function OrdersPage() {
       return (
         order.customer_name.toLowerCase().includes(term) ||
         order.id.toString().includes(term) ||
-        order.customer_phone.includes(term)
+        order.customer_phone?.includes(term)
       );
     })
     .sort(
@@ -181,18 +186,14 @@ export default function OrdersPage() {
                   {order.status === 'pending' && (
                     <>
                       <button
-                        onClick={() =>
-                          updateOrderStatus(order.id, 'preparing')
-                        }
+                        onClick={() => updateOrderStatus(order.id, 'preparing')}
                         className="px-3 py-1 text-sm bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200"
                       >
                         Start Preparing
                       </button>
 
                       <button
-                        onClick={() =>
-                          updateOrderStatus(order.id, 'cancelled')
-                        }
+                        onClick={() => updateOrderStatus(order.id, 'cancelled')}
                         className="px-3 py-1 text-sm bg-red-100 text-red-800 rounded hover:bg-red-200"
                       >
                         Cancel
@@ -227,10 +228,12 @@ export default function OrdersPage() {
                   {order.customer_name}
                 </p>
 
-                <p>
-                  <span className="font-semibold">Phone:</span>{' '}
-                  {order.customer_phone}
-                </p>
+                {order.customer_phone && (
+                  <p>
+                    <span className="font-semibold">Phone:</span>{' '}
+                    {order.customer_phone}
+                  </p>
+                )}
 
                 {order.customer_email && (
                   <p>
@@ -248,7 +251,7 @@ export default function OrdersPage() {
 
                 <p>
                   <span className="font-semibold">Total:</span>{' '}
-                  ${(order.total || 0).toFixed(2)}
+                  ${((order.total ?? 0)).toFixed(2)}
                 </p>
 
                 <p>
@@ -266,8 +269,7 @@ export default function OrdersPage() {
                         : 'bg-red-100 text-red-800'
                     }`}
                   >
-                    {order.status.charAt(0).toUpperCase() +
-                      order.status.slice(1)}
+                    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                   </span>
                 </p>
 
@@ -280,10 +282,10 @@ export default function OrdersPage() {
                 <div className="mt-2">
                   <p className="font-semibold">Items:</p>
                   <ul className="list-disc pl-5">
-                    {order.order_items.map((item) => (
+                    {(order.items ?? []).map((item) => (
                       <li key={item.id}>
-                        {item.quantity}x {item.menu_item?.name} - $
-                        {(item.price || 0).toFixed(2)} each
+                        {item.quantity}x {item.name} — $
+                        {(item.price || 0).toFixed(2)}
                       </li>
                     ))}
                   </ul>
