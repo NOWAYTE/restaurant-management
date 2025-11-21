@@ -15,7 +15,7 @@ export default function KitchenLoginPage() {
   const [error, setError] = useState('');
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/kitchen';
+  const callbackUrl = searchParams.get('callbackUrl') || '/kitchen/orders';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +32,8 @@ export default function KitchenLoginPage() {
       if (result?.error) {
         setError('Invalid kitchen code');
       } else {
-        router.push(callbackUrl);
+        // Force a hard redirect to prevent any client-side routing issues
+        window.location.href = result?.url || '/kitchen/orders';
       }
     } catch (err) {
       setError('An error occurred. Please try again.');

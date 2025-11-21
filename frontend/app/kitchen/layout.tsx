@@ -2,7 +2,7 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function KitchenLayout({
@@ -12,21 +12,28 @@ export default function KitchenLayout({
 }) {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    if (status === 'loading') return;
+    if (status === 'loading' || pathname === '/kitchen/login') return;
     
     if (!session) {
       router.push('/kitchen/login');
     } else if (session.user?.role !== 'kitchen') {
       router.push('/auth/unauthorized');
     }
-  }, [session, status, router]);
+  }, [session, status, router, pathname]);
 
-  if (status === 'loading') {
+  if (status === 'loading' && pathname !== '/kitchen/login') {
     return <div>Loading...</div>;
   }
 
+  // Don't block the login page
+  if (pathname === '/kitchen/login') {
+    return <>{children}</>;
+  }
+
+  // Check auth for other pages
   if (!session || session.user?.role !== 'kitchen') {
     return null; // Will be redirected by the effect
   }
