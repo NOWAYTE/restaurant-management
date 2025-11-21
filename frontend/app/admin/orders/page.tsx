@@ -33,37 +33,44 @@ export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-  try {
-    console.log('Fetching orders...');
-    const response = await fetch('/api/orders/', {  // Added trailing slash
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${session?.accessToken}`,
-      },
-    });
-    
-    console.log('Response status:', response.status);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Error response:', errorText);
-      throw new Error('Failed to fetch orders');
+  const fetchOrders = async () => {
+    try {
+      if (!session) {
+        console.error('No active session');
+        return;
+      }
+      
+      console.log('Fetching orders with token:', session?.accessToken);
+      const response = await fetch('/api/orders', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.accessToken}`,
+        },
+        cache: 'no-store'
+      });
+      
+      console.log('Response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error(`Failed to fetch orders: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('Orders data:', data);
+      setOrders(data);
+    } catch (error) {
+      console.error('Error in fetchOrders:', error);
+      alert(`Error loading orders: ${error.message}`);
+    } finally {
+      setIsLoading(false);
     }
-    
-    const data = await response.json();
-    console.log('Orders data:', data);
-    setOrders(data);
-  } catch (error) {
-    console.error('Error in fetchOrders:', error);
-    alert(`Error loading orders: ${error.message}`);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
+  useEffect(() => {
     if (session) {
+      setIsLoading(true);
       fetchOrders();
     }
   }, [session]);
@@ -95,6 +102,31 @@ export default function OrdersPage() {
       alert('Failed to update order status. Please try again.');
     }
   };
+
+  if (!session) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Authentication Required</h2>
+          <p className="mb-4">Please sign in to view orders</p>
+          <Link 
+            href="/auth/signin" 
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          >
+            Sign In
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   const filteredOrders = (Array.isArray(orders) ? orders : [])
     .filter((order) =>
