@@ -1,9 +1,10 @@
 # backend/app/routes/dashboard.py
 from flask import Blueprint, jsonify
 from app.extensions import db
-from app.models import Order, MenuItem, Reservation
+from app.models import Order, MenuItem, Reservation, OrderItem
 from datetime import datetime, timedelta
 from sqlalchemy import func
+
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
@@ -75,8 +76,7 @@ def get_dashboard_stats():
         }
         print("Error in get_dashboard_stats:", error_details)
         return jsonify(error_details), 500
-
-        
+    
 def format_time_ago(dt):
     now = datetime.utcnow()
     diff = now - dt
