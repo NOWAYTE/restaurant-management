@@ -79,10 +79,11 @@ useEffect(() => {
 
   const updateOrderStatus = async (orderId: string, status: Order['status']) => {
     try {
-      const res = await fetch(`/api/orders/${orderId}/status`, {
-        method: 'PATCH',
+      const res = await fetch(`/api/kitchen/orders/${orderId}/status`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.accessToken}`
         },
         body: JSON.stringify({ status }),
       });
