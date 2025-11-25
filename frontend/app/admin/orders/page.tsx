@@ -178,27 +178,19 @@ export default function OrdersPage() {
 
                 {/* Status Display */}
                 <div className="flex flex-wrap gap-2">
-                  <span className="px-3 py-1 text-sm bg-gray-100 text-gray-800 rounded">
+                  <span className={`px-3 py-1 text-sm rounded ${
+                    order.status === 'pending'
+                      ? 'bg-yellow-100 text-yellow-800'
+                      : order.status === 'preparing'
+                      ? 'bg-blue-100 text-blue-800'
+                      : order.status === 'ready'
+                      ? 'bg-green-100 text-green-800'
+                      : order.status === 'completed'
+                      ? 'bg-gray-100 text-gray-800'
+                      : 'bg-red-100 text-red-800'
+                  }`}>
                     {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                   </span>
-
-                  {order.status === 'preparing' && (
-                    <button
-                      onClick={() => updateOrderStatus(order.id, 'ready')}
-                      className="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded hover:bg-blue-200"
-                    >
-                      Mark as Ready
-                    </button>
-                  )}
-
-                  {order.status === 'ready' && (
-                    <button
-                      onClick={() => updateOrderStatus(order.id, 'completed')}
-                      className="px-3 py-1 text-sm bg-green-100 text-green-800 rounded hover:bg-green-200"
-                    >
-                      Complete Order
-                    </button>
-                  )}
                 </div>
               </div>
 
