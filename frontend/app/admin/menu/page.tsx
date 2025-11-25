@@ -50,6 +50,21 @@ const fetchMenuItems = async () => {
   }
 };
 
+// Add this function inside your AdminMenuPage component, after the other handler functions
+const handleEdit = (item: MenuItem) => {
+  setEditingId(item.id);
+  setFormData({
+    name: item.name,
+    description: item.description,
+    price: item.price.toString(),
+    category: item.category,
+    image_url: item.image_url || '',
+    is_available: item.is_available
+  });
+  setIsAdding(true);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
 // Update the handleDelete function
 const handleDelete = async (id: number) => {
   if (!confirm('Are you sure you want to delete this menu item?')) return;
