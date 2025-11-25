@@ -78,9 +78,9 @@ export default function OrdersPage() {
       }
 
       setOrders(prevOrders =>
-      prevOrders.map(order =>
-        order.id === orderId ? { ...order, status } : order
-      ));
+        prevOrders.map(order =>
+          order.id === orderId ? { ...order, status } : order
+        ));
     } catch (err: any) {
       setError(err.message || 'Failed to update order');
     }
@@ -176,25 +176,11 @@ export default function OrdersPage() {
                   )}
                 </div>
 
-                {/* STATUS BUTTONS */}
+                {/* Status Display */}
                 <div className="flex flex-wrap gap-2">
-                  {order.status === 'pending' && (
-                    <>
-                      <button
-                        onClick={() => updateOrderStatus(order.id, 'preparing')}
-                        className="px-3 py-1 text-sm bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200"
-                      >
-                        Start Preparing
-                      </button>
-
-                      <button
-                        onClick={() => updateOrderStatus(order.id, 'cancelled')}
-                        className="px-3 py-1 text-sm bg-red-100 text-red-800 rounded hover:bg-red-200"
-                      >
-                        Cancel
-                      </button>
-                    </>
-                  )}
+                  <span className="px-3 py-1 text-sm bg-gray-100 text-gray-800 rounded">
+                    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                  </span>
 
                   {order.status === 'preparing' && (
                     <button
@@ -252,17 +238,16 @@ export default function OrdersPage() {
                 <p>
                   <span className="font-semibold">Status:</span>
                   <span
-                    className={`ml-1 px-2 py-0.5 text-xs rounded-full ${
-                      order.status === 'pending'
+                    className={`ml-1 px-2 py-0.5 text-xs rounded-full ${order.status === 'pending'
                         ? 'bg-yellow-100 text-yellow-800'
                         : order.status === 'preparing'
-                        ? 'bg-blue-100 text-blue-800'
-                        : order.status === 'ready'
-                        ? 'bg-green-100 text-green-800'
-                        : order.status === 'completed'
-                        ? 'bg-gray-100 text-gray-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}
+                          ? 'bg-blue-100 text-blue-800'
+                          : order.status === 'ready'
+                            ? 'bg-green-100 text-green-800'
+                            : order.status === 'completed'
+                              ? 'bg-gray-100 text-gray-800'
+                              : 'bg-red-100 text-red-800'
+                      }`}
                   >
                     {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                   </span>
