@@ -78,58 +78,56 @@ useEffect(() => {
   }, [session]);
 
   const updateOrderStatus = async (orderId: string, status: Order['status']) => {
+  try {
+    console.log('Updating order status:', { orderId, status, token: session?.accessToken });
+    
+    const url = `http://localhost:5000/api/kitchen/orders/${orderId}/status`;
+    const options = {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status }),
+    };
+
+    console.log('Sending request to:', url, 'with options:', options);
+    
+    const res = await fetch(url, options);
+    
+    // Read the response once and store it
+    const responseText = await res.text();
+    let responseData;
     try {
-      console.log('Updating order status:', { orderId, status, token: session?.accessToken });
-      
-      const url = `http://localhost:5000/api/kitchen/orders/${orderId}/status`;
-      const options = {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ status }),
-      };
-
-      console.log('Sending request to:', url, 'with options:', options);
-      
-      const res = await fetch(url, options);
-      const responseText = await res.text();
-      
-      console.log('Response status:', res.status);
-      console.log('Response headers:', Object.fromEntries(res.headers.entries()));
-      console.log('Response body:', responseText);
-
-      if (!res.ok) {
-        let errorData;
-        try {
-          errorData = responseText ? JSON.parse(responseText) : {};
-        } catch (e) {
-          errorData = { raw: responseText };
-        }
-        
-        console.error('Failed to update order status:', {
-          url,
-          status: res.status,
-          statusText: res.statusText,
-          headers: Object.fromEntries(res.headers.entries()),
-          error: errorData
-        });
-        
-        throw new Error(`Failed to update order status: ${res.status} ${res.statusText}`);
-      }
-
-      const updatedOrder = await res.json();
-      
-      setOrders(prev =>
-        prev.map(order =>
-          order.id === orderId ? { ...order, status } : order
-        )
-      );
-    } catch (error) {
-      console.error('Error updating order status:', error);
-      // Error is already logged to console
+      responseData = responseText ? JSON.parse(responseText) : {};
+    } catch (e) {
+      responseData = { raw: responseText };
     }
-  };
+    
+    console.log('Response status:', res.status);
+    console.log('Response headers:', Object.fromEntries(res.headers.entries()));
+    console.log('Response body:', responseData);
+
+    if (!res.ok) {
+      console.error('Failed to update order status:', {
+        url,
+        status: res.status,
+        statusText: res.statusText,
+        headers: Object.fromEntries(res.headers.entries()),
+        error: responseData
+      });
+      
+      throw new Error(`Failed to update order status: ${res.status} ${res.statusText}`);
+    }
+    
+    setOrders(prev =>
+      prev.map(order =>
+        order.id === orderId ? { ...order, status } : order
+      )
+    );
+  } catch (error) {
+    console.error('Error updating order status:', error);
+  }
+};
 
   if (loading) {
     return <div className="container mx-auto px-4 py-8">Loading orders...</div>;
