@@ -35,127 +35,99 @@ export default function AdminMenuPage() {
       fetchMenuItems();
     }
   }, [session]);
+  // Update the fetchMenuItems function
+const fetchMenuItems = async () => {
+  try {
+    const res = await fetch('/api/menu');
+    if (!res.ok) throw new Error('Failed to load menu items');
+    const data = await res.json();
+    setMenuItems(data);
+  } catch (error) {
+    console.error('Error fetching menu:', error);
+    setError('Failed to load menu items');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
-  const fetchMenuItems = async () => {
-    try {
-      const res = await fetch('/api/menu', {
-        headers: {
-          'Authorization': `Bearer ${session?.accessToken}`
-        }
-      });
-      const data = await res.json();
-      setMenuItems(data);
-    } catch (error) {
-      console.error('Error fetching menu:', error);
-      setError('Failed to load menu items');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target as HTMLInputElement;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
-    }));
-  };
-
-  const handleEdit = (item: MenuItem) => {
-    setEditingId(item.id);
-    setFormData({
-      name: item.name,
-      description: item.description || '',
-      price: item.price.toString(),
-      category: item.category,
-      image_url: item.image_url || '',
-      is_available: item.is_available
+// Update the handleDelete function
+const handleDelete = async (id: number) => {
+  if (!confirm('Are you sure you want to delete this menu item?')) return;
+  
+  try {
+    const response = await fetch(`/api/menu/${id}`, {
+      method: 'DELETE',
     });
-    setIsAdding(true);
-  };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this menu item?')) return;
+    if (!response.ok) throw new Error('Failed to delete menu item');
     
-    try {
-      const response = await fetch(`/api/menu/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${session?.accessToken}`
-        }
-      });
+    await fetchMenuItems();
+  } catch (err) {
+    console.error('Error deleting menu item:', err);
+    setError('Failed to delete menu item');
+  }
+};
 
-      if (!response.ok) throw new Error('Failed to delete menu item');
-      
-      await fetchMenuItems();
-    } catch (err) {
-      console.error('Error deleting menu item:', err);
-      setError('Failed to delete menu item');
+// Update the handleToggleAvailability function
+const handleToggleAvailability = async (id: number, currentStatus: boolean) => {
+  try {
+    const response = await fetch(`/api/menu/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ is_available: !currentStatus })
+    });
+
+    if (!response.ok) throw new Error('Failed to update menu item status');
+    
+    await fetchMenuItems();
+  } catch (err) {
+    console.error('Error toggling menu item status:', err);
+    setError('Failed to update menu item status');
+  }
+};
+
+// Update the handleSubmit function
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError('');
+
+  const url = editingId ? `/api/menu/${editingId}` : '/api/menu';
+  const method = editingId ? 'PATCH' : 'POST';
+
+  try {
+    const response = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        ...formData,
+        price: parseFloat(formData.price)
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(editingId ? 'Failed to update menu item' : 'Failed to add menu item');
     }
-  };
 
-  const handleToggleAvailability = async (id: number, currentStatus: boolean) => {
-    try {
-      const response = await fetch(`/api/menu/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.accessToken}`
-        },
-        body: JSON.stringify({ is_available: !currentStatus })
-      });
-
-      if (!response.ok) throw new Error('Failed to update menu item status');
-      
-      await fetchMenuItems();
-    } catch (err) {
-      console.error('Error toggling menu item status:', err);
-      setError('Failed to update menu item status');
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    const url = editingId 
-      ? `/api/menu/${editingId}`
-      : '/api/menu';
-    const method = editingId ? 'PATCH' : 'POST';
-
-    try {
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.accessToken}`
-        },
-        body: JSON.stringify({
-          ...formData,
-          price: parseFloat(formData.price)
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(editingId ? 'Failed to update menu item' : 'Failed to add menu item');
-      }
-
-      await fetchMenuItems();
-      setFormData({
-        name: '',
-        description: '',
-        price: '',
-        category: '',
-        image_url: '',
-        is_available: true
-      });
-      setIsAdding(false);
-      setEditingId(null);
-    } catch (err) {
-      console.error('Error saving menu item:', err);
-      setError(`Failed to ${editingId ? 'update' : 'add'} menu item. Please try again.`);
-    }
-  };
+    await fetchMenuItems();
+    setFormData({
+      name: '',
+      description: '',
+      price: '',
+      category: '',
+      image_url: '',
+      is_available: true
+    });
+    setIsAdding(false);
+    setEditingId(null);
+  } catch (err) {
+    console.error('Error saving menu item:', err);
+    setError(`Failed to ${editingId ? 'update' : 'add'} menu item. Please try again.`);
+  }
+};
 
   if (isLoading) return <div className="flex justify-center items-center h-64">Loading...</div>;
   if (!session || session.user.role !== 'admin') {
