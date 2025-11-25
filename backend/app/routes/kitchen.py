@@ -67,7 +67,6 @@ def update_order_status(order_id):
 
 
 @kitchen_bp.route('/stats', methods=['GET'])
-@jwt_required()
 def get_kitchen_stats():
     try:
         # Count orders by status

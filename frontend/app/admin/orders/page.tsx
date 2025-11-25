@@ -60,11 +60,6 @@ export default function OrdersPage() {
   }, []);
 
   const updateOrderStatus = async (orderId: number, newStatus: Order['status']) => {
-    if (!session?.user?.token) {
-      setError('You must be logged in to update orders');
-      return;
-    }
-
     try {
       const response = await fetch(
         `http://127.0.0.1:5000/api/orders/${orderId}/status`,
@@ -72,7 +67,6 @@ export default function OrdersPage() {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${session.user.token}`,
           },
           body: JSON.stringify({ status: newStatus }),
         }
@@ -83,9 +77,10 @@ export default function OrdersPage() {
         throw new Error(errData.error || 'Failed to update order.');
       }
 
-      setOrders((prev) =>
-        prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
-      );
+      setOrders(prevOrders =>
+      prevOrders.map(order =>
+        order.id === orderId ? { ...order, status } : order
+      ));
     } catch (err: any) {
       setError(err.message || 'Failed to update order');
     }
