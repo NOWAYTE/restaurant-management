@@ -88,7 +88,6 @@ useEffect(() => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ status }),
-        credentials: 'include' as const
       };
 
       console.log('Sending request to:', url, 'with options:', options);
@@ -128,8 +127,7 @@ useEffect(() => {
       );
     } catch (error) {
       console.error('Error updating order status:', error);
-      // Optionally show a toast or alert to the user
-      alert(`Error updating order status: ${error.message}`);
+      // Error is already logged to console
     }
   };
 
