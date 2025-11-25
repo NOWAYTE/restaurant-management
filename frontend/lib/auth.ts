@@ -44,6 +44,13 @@ export const authOptions: AuthOptions = {
       session.accessToken = token.accessToken
       session.user = token.user
       return session
+    },
+    async redirect({ url, baseUrl }) {
+      // Redirect to /admin/dashboard after successful login
+      if (url === '/dashboard' || url.startsWith('/dashboard/')) {
+        return `${baseUrl}/admin/dashboard`;
+      }
+      return url.startsWith(baseUrl) ? url : baseUrl;
     }
   },
   pages: {
