@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { auth } from 'next-auth/next';
 
 export async function PATCH(
   request: Request,
@@ -46,7 +46,7 @@ export async function DELETE(
     const res = await fetch(`http://localhost:5000/api/menu/${params.id}`, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${session.accessToken}`
+        'Content-Type': 'application/json'
       }
     });
 
