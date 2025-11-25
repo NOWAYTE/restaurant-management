@@ -87,8 +87,18 @@ useEffect(() => {
         body: JSON.stringify({ status }),
       });
 
-      if (!res.ok) throw new Error('Failed to update order status');
+      if (!res.ok) {
+        const errorData = await res.text();
+        console.error('Failed to update order status:', {
+          status: res.status,
+          statusText: res.statusText,
+          error: errorData
+        });
+        throw new Error(`Failed to update order status: ${res.status} ${res.statusText}`);
+      }
 
+      const updatedOrder = await res.json();
+      
       setOrders(prev =>
         prev.map(order =>
           order.id === orderId ? { ...order, status } : order
@@ -96,6 +106,8 @@ useEffect(() => {
       );
     } catch (error) {
       console.error('Error updating order status:', error);
+      // Optionally show a toast or alert to the user
+      alert(`Error updating order status: ${error.message}`);
     }
   };
 
