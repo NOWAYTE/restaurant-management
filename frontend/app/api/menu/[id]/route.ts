@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from 'next-auth/next';
 
+
 export async function PATCH(
   request: Request,
   { params }: { params: { id: string } }
