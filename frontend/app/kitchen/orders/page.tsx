@@ -79,7 +79,7 @@ useEffect(() => {
 
   const updateOrderStatus = async (orderId: string, status: Order['status']) => {
     try {
-      const res = await fetch(`/api/orders/${orderId}/status`, {
+      const res = await fetch(`http://localhost:5000/api/kitchen/orders/${orderId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
