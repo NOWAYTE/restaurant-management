@@ -40,7 +40,6 @@ def get_kitchen_orders():
 
 
 @kitchen_bp.route('/orders/<int:order_id>/status', methods=['PUT'])
-@jwt_required()
 def update_order_status(order_id):
     try:
         data = request.get_json()
