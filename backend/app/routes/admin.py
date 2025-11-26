@@ -72,3 +72,25 @@ def get_sales_report():
         'total_orders': 0,
         'active_menu_items': 0
     })
+
+@admin_bp.route('/api/admin/stats')
+def get_stats():
+    # Get total reservations
+    total_reservations = Reservation.query.count()
+    
+    # Get today's reservations
+    today = date.today()
+    today_reservations = Reservation.query.filter(
+        db.func.date(Reservation.date) == today
+    ).count()
+    
+    # Get upcoming reservations (future dates)
+    upcoming_reservations = Reservation.query.filter(
+        db.func.date(Reservation.date) > datetime.now().date()
+    ).count()
+    
+    return jsonify({
+        'totalReservations': total_reservations,
+        'todayReservations': today_reservations,
+        'upcomingReservations': upcoming_reservations
+    })
