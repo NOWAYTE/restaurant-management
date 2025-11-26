@@ -3,9 +3,9 @@ from app.models.reservation import Reservation
 from app import db
 from datetime import datetime
 
-bp = Blueprint("reservations", __name__, url_prefix="/api")
+bp = Blueprint("reservations", __name__, url_prefix="/api/reservations")
 
-@bp.route('/reservations', methods=['GET'])
+@bp.route('', methods=['GET'])
 def get_reservations():
     reservations = Reservation.query.order_by(Reservation.date, Reservation.time).all()
     return jsonify([{
@@ -18,7 +18,7 @@ def get_reservations():
         "created_at": r.created_at.isoformat() if r.created_at else None
     } for r in reservations])
 
-@bp.route('/reservations', methods=['POST'])
+@bp.route('', methods=['POST'])
 def create_reservation():
     data = request.get_json()
     
