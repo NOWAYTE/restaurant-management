@@ -31,15 +31,6 @@ export default function Navigation() {
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
               {/* Menu link - visible to all */}
-              <Link
-                href="/menu"
-                className={`${pathname === '/menu'
-                    ? 'border-blue-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                  } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
-              >
-                Menu
-              </Link>
               {session && (
                 <>
                   {(session.user?.user?.role === 'admin' || session.user?.user?.role === 'kitchen') && (
@@ -66,6 +57,15 @@ export default function Navigation() {
                   )}
                 </>
               )}
+              <Link
+                href="/menu"
+                className={`${pathname === '/menu'
+                    ? 'border-blue-500 text-gray-900'
+                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+              >
+                Menu
+              </Link>
             </div>
           </div>
           <div className="hidden sm:ml-6 sm:flex sm:items-center space-x-4">
