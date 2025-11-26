@@ -35,149 +35,154 @@ export default function AdminMenuPage() {
       fetchMenuItems();
     }
   }, [session]);
-  // Update the fetchMenuItems function
-const fetchMenuItems = async () => {
-  try {
-    const res = await fetch('/api/menu');
-    if (!res.ok) throw new Error('Failed to load menu items');
-    const data = await res.json();
-    setMenuItems(data);
-  } catch (error) {
-    console.error('Error fetching menu:', error);
-    setError('Failed to load menu items');
-  } finally {
-    setIsLoading(false);
-  }
-};
 
-// Add this function to handle form input changes
-const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-  const { name, value, type } = e.target as HTMLInputElement;
-  const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : undefined;
-  
-  setFormData(prev => ({
-    ...prev,
-    [name]: type === 'checkbox' ? checked : value
-  }));
-};
+  const fetchMenuItems = async () => {
+    try {
+      const res = await fetch('/api/menu');
+      if (!res.ok) throw new Error('Failed to load menu items');
+      const data = await res.json();
+      setMenuItems(data);
+    } catch (error) {
+      console.error('Error fetching menu:', error);
+      setError('Failed to load menu items');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-const handleDelete = async (id: number) => {
-  if (!confirm('Are you sure you want to delete this menu item?')) return;
-  
-  try {
-    console.log('Deleting menu item with ID:', id); // Debug log
-    const response = await fetch(`/api/menu/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json'
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target as HTMLInputElement;
+    const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : undefined;
+    
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this menu item?')) return;
+    
+    try {
+      console.log('Deleting menu item with ID:', id);
+      const response = await fetch(`/api/menu/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const responseData = await response.json().catch(() => ({}));
+      
+      if (!response.ok) {
+        console.error('Delete failed with status:', response.status, 'Response:', responseData);
+        throw new Error(responseData.message || 'Failed to delete menu item');
       }
-    });
+      
+      console.log('Delete successful, refreshing menu items...');
+      await fetchMenuItems();
+    } catch (err) {
+      console.error('Error in handleDelete:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete menu item');
+    }
+  };
 
-    const responseData = await response.json().catch(() => ({})); // Try to parse error response
-    
-    if (!response.ok) {
-      console.error('Delete failed with status:', response.status, 'Response:', responseData); // Debug log
-      throw new Error(responseData.message || 'Failed to delete menu item');
+  const handleEdit = (item: MenuItem) => {
+    console.log('Editing item with ID:', item.id);
+    if (!item.id) {
+      console.error('Cannot edit item: No ID provided');
+      setError('Cannot edit item: Invalid item ID');
+      return;
     }
     
-    console.log('Delete successful, refreshing menu items...'); // Debug log
-    await fetchMenuItems();
-  } catch (err) {
-    console.error('Error in handleDelete:', err); // Debug log
-    setError(err instanceof Error ? err.message : 'Failed to delete menu item');
-  }
-};
-
-// Add this function inside your AdminMenuPage component, after the other handler functions
-const handleEdit = (item: MenuItem) => {
-  setEditingId(item.id);
-  setFormData({
-    name: item.name,
-    description: item.description,
-    price: item.price.toString(),
-    category: item.category,
-    image_url: item.image_url || '',
-    is_available: item.is_available
-  });
-  setIsAdding(true);
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-};
-
-// Update the handleDelete function
-
-
-// Update the handleToggleAvailability function
-const handleToggleAvailability = async (id: number, currentStatus: boolean) => {
-  try {
-    const response = await fetch(`/api/menu/${id}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ is_available: !currentStatus })
-    });
-
-    if (!response.ok) throw new Error('Failed to update menu item status');
-    
-    await fetchMenuItems();
-  } catch (err) {
-    console.error('Error toggling menu item status:', err);
-    setError('Failed to update menu item status');
-  }
-};
-
-// Update the handleSubmit function
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setError('');
-
-  const baseUrl = '/api/menu';
-  const url = editingId ? `${baseUrl}/${editingId}` : baseUrl;
-  const method = editingId ? 'PATCH' : 'POST';
-
-  try {
-    // Prepare the request body
-    const requestBody = {
-      ...formData,
-      price: parseFloat(formData.price),
-      // Ensure boolean values are properly sent as booleans, not strings
-      is_available: Boolean(formData.is_available)
-    };
-
-    console.log('Sending request to:', url);
-    console.log('Request body:', requestBody);
-
-    const response = await fetch(url, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-    });
-
-    const responseData = await response.json().catch(() => ({}));
-    
-    if (!response.ok) {
-      console.error('Request failed with status:', response.status, 'Response:', responseData);
-      throw new Error(responseData.message || (editingId ? 'Failed to update menu item' : 'Failed to add menu item'));
-    }
-
-    await fetchMenuItems();
+    setEditingId(item.id);
     setFormData({
-      name: '',
-      description: '',
-      price: '',
-      category: '',
-      image_url: '',
-      is_available: true
+      name: item.name,
+      description: item.description,
+      price: item.price.toString(),
+      category: item.category,
+      image_url: item.image_url || '',
+      is_available: item.is_available
     });
-    setIsAdding(false);
-    setEditingId(null);
-  } catch (err) {
-    console.error('Error saving menu item:', err);
-    setError(`Failed to ${editingId ? 'update' : 'add'} menu item. Please try again.`);
-  }
-};
+    setIsAdding(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleToggleAvailability = async (id: number, currentStatus: boolean) => {
+    try {
+      const response = await fetch(`/api/menu/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ is_available: !currentStatus })
+      });
+
+      if (!response.ok) throw new Error('Failed to update menu item status');
+      
+      await fetchMenuItems();
+    } catch (err) {
+      console.error('Error toggling menu item status:', err);
+      setError('Failed to update menu item status');
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    console.log('Current editingId:', editingId);
+    
+    const baseUrl = '/api/menu';
+    const url = editingId ? `${baseUrl}/${editingId}` : baseUrl;
+    const method = editingId ? 'PATCH' : 'POST';
+
+    try {
+      const requestBody = {
+        name: formData.name,
+        description: formData.description,
+        price: parseFloat(formData.price),
+        category: formData.category,
+        image_url: formData.image_url,
+        is_available: Boolean(formData.is_available)
+      };
+
+      console.log('Sending request to:', url);
+      console.log('Request body:', requestBody);
+      console.log('Using method:', method);
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      const responseData = await response.json().catch(() => ({}));
+      
+      if (!response.ok) {
+        console.error('Request failed with status:', response.status, 'Response:', responseData);
+        throw new Error(responseData.message || (editingId ? 'Failed to update menu item' : 'Failed to add menu item'));
+      }
+
+      // Reset form and fetch updated items
+      setFormData({
+        name: '',
+        description: '',
+        price: '',
+        category: '',
+        image_url: '',
+        is_available: true
+      });
+      setIsAdding(false);
+      setEditingId(null);
+      await fetchMenuItems();
+    } catch (err) {
+      console.error('Error saving menu item:', err);
+      setError(`Failed to ${editingId ? 'update' : 'add'} menu item. Please try again.`);
+    }
+  };
 
   if (isLoading) return <div className="flex justify-center items-center h-64">Loading...</div>;
   if (!session || session.user.role !== 'admin') {
