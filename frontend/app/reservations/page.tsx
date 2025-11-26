@@ -34,7 +34,7 @@ export default function ReservationPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch("/api/reservations", {
+      const response = await fetch("http://localhost:5000/api/reservations", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
