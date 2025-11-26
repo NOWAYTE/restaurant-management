@@ -37,7 +37,6 @@ def create_app():
     migrate.init_app(app, db)
     jwt.init_app(app)
     socketio = init_socketio(app)
-
     app.config['JWT_SECRET_KEY'] = Config.JWT_SECRET_KEY
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
 
@@ -73,6 +72,7 @@ def create_app():
     from app.routes.admin import admin_bp
     from app.routes.orders import orders_bp
     from app.routes.dashboard import dashboard_bp
+    from app.routes.reservations import reservations_bp
 
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
@@ -81,6 +81,7 @@ def create_app():
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
     app.register_blueprint(orders_bp, url_prefix='/api/orders')
     app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
+    app.register_blueprint(reservations_bp, url_prefix='/api/reservations')
 
 
     # Register blueprints
