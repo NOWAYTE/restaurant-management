@@ -50,6 +50,44 @@ const fetchMenuItems = async () => {
   }
 };
 
+// Add this function to handle form input changes
+const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const { name, value, type } = e.target as HTMLInputElement;
+  const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : undefined;
+  
+  setFormData(prev => ({
+    ...prev,
+    [name]: type === 'checkbox' ? checked : value
+  }));
+};
+
+const handleDelete = async (id: number) => {
+  if (!confirm('Are you sure you want to delete this menu item?')) return;
+  
+  try {
+    console.log('Deleting menu item with ID:', id); // Debug log
+    const response = await fetch(`/api/menu/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    const responseData = await response.json().catch(() => ({})); // Try to parse error response
+    
+    if (!response.ok) {
+      console.error('Delete failed with status:', response.status, 'Response:', responseData); // Debug log
+      throw new Error(responseData.message || 'Failed to delete menu item');
+    }
+    
+    console.log('Delete successful, refreshing menu items...'); // Debug log
+    await fetchMenuItems();
+  } catch (err) {
+    console.error('Error in handleDelete:', err); // Debug log
+    setError(err instanceof Error ? err.message : 'Failed to delete menu item');
+  }
+};
+
 // Add this function inside your AdminMenuPage component, after the other handler functions
 const handleEdit = (item: MenuItem) => {
   setEditingId(item.id);
@@ -66,22 +104,7 @@ const handleEdit = (item: MenuItem) => {
 };
 
 // Update the handleDelete function
-const handleDelete = async (id: number) => {
-  if (!confirm('Are you sure you want to delete this menu item?')) return;
-  
-  try {
-    const response = await fetch(`/api/menu/${id}`, {
-      method: 'DELETE',
-    });
 
-    if (!response.ok) throw new Error('Failed to delete menu item');
-    
-    await fetchMenuItems();
-  } catch (err) {
-    console.error('Error deleting menu item:', err);
-    setError('Failed to delete menu item');
-  }
-};
 
 // Update the handleToggleAvailability function
 const handleToggleAvailability = async (id: number, currentStatus: boolean) => {
