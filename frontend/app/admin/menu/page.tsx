@@ -134,15 +134,12 @@ export default function AdminMenuPage() {
     console.log('Current editingId:', editingId);
     
     // If we're editing but don't have an ID, something went wrong
-    if (editingId === null || editingId === undefined) {
-      console.error('No editing ID found when trying to update menu item');
-      setError('Error: No menu item ID found for update');
-      return;
-    }
+    const isEditing = editingId !==null;
 
     const baseUrl = '/api/menu';
-    const url = editingId ? `${baseUrl}/${editingId}` : baseUrl;
-    const method = editingId ? 'PATCH' : 'POST';
+    const url = isEditing ? `${baseUrl}/${editingId}` : baseUrl;
+    const method = isEditing ? 'PATCH' : 'POST';
+
 
     try {
       const requestBody = {
