@@ -133,6 +133,13 @@ export default function AdminMenuPage() {
 
     console.log('Current editingId:', editingId);
     
+    // If we're editing but don't have an ID, something went wrong
+    if (editingId === null || editingId === undefined) {
+      console.error('No editing ID found when trying to update menu item');
+      setError('Error: No menu item ID found for update');
+      return;
+    }
+
     const baseUrl = '/api/menu';
     const url = editingId ? `${baseUrl}/${editingId}` : baseUrl;
     const method = editingId ? 'PATCH' : 'POST';
@@ -176,7 +183,7 @@ export default function AdminMenuPage() {
         is_available: true
       });
       setIsAdding(false);
-      setEditingId(null);
+      setEditingId(null); // Only reset editingId after successful request
       await fetchMenuItems();
     } catch (err) {
       console.error('Error saving menu item:', err);
