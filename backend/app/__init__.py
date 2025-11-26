@@ -72,7 +72,7 @@ def create_app():
     from app.routes.admin import admin_bp
     from app.routes.orders import orders_bp
     from app.routes.dashboard import dashboard_bp
-    from app.routes.reservations import reservations_bp
+    from app.routes.reservations import bp as reservations_bp
 
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
