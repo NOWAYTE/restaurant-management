@@ -33,35 +33,24 @@ export default function Navigation() {
             RestroManage
           </Link>
 
-          {/* Right Side: Menu, Cart, Booking, Auth */}
+          {/* Right Side: Navigation Items */}
           <div className="flex items-center space-x-6">
-            {/* Menu Links */}
-            <div className="flex items-center space-x-4">
-              <Link href="/menu" className={linkClasses(pathname === '/menu')}>
-                Menu
-              </Link>
-              {session && (session.user?.user?.role === 'admin' || session.user?.user?.role === 'kitchen') && (
-                <Link href="/kitchen" className={linkClasses(pathname === '/kitchen')}>
-                  Kitchen
-                </Link>
-              )}
-              {session?.user?.user?.role === 'admin' && (
-                <Link href="/admin" className={linkClasses(pathname.startsWith('/admin'))}>
-                  Admin
-                </Link>
-              )}
-            </div>
-
-            {/* Divider */}
-            <div className="h-6 w-px bg-gray-300"></div>
-
-            {/* Book a Table */}
-            <Link
-              href="/reservations"
-              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg transition-colors duration-200"
-            >
-              Book a Table
+            {/* Menu Link */}
+            <Link href="/menu" className={linkClasses(pathname === '/menu')}>
+              Menu
             </Link>
+
+            {/* Admin/Kichen Links (only for authorized users) */}
+            {session && (session.user?.user?.role === 'admin' || session.user?.user?.role === 'kitchen') && (
+              <Link href="/kitchen" className={linkClasses(pathname === '/kitchen')}>
+                Kitchen
+              </Link>
+            )}
+            {session?.user?.user?.role === 'admin' && (
+              <Link href="/admin" className={linkClasses(pathname.startsWith('/admin'))}>
+                Admin
+              </Link>
+            )}
 
             {/* Cart */}
             <div className="relative">
@@ -116,6 +105,9 @@ export default function Navigation() {
               )}
             </div>
 
+            {/* Divider */}
+            <div className="h-6 w-px bg-gray-300"></div>
+
             {/* Auth / User Info */}
             {session ? (
               <div className="flex items-center space-x-4">
@@ -141,6 +133,14 @@ export default function Navigation() {
                 Sign in
               </Link>
             )}
+
+            {/* Book a Table */}
+            <Link
+              href="/reservations"
+              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg transition-colors duration-200"
+            >
+              Book a Table
+            </Link>
           </div>
         </div>
       </div>
