@@ -1,10 +1,11 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, request, jsonify
 from app.models.reservation import Reservation
 from app import db
+from datetime import datetime
 
-bp = Blueprint("reservations", __name__, url_prefix="/api/reservations")
+bp = Blueprint("reservations", __name__, url_prefix="/api")
 
-@bp.route('/api/reservations', methods=['GET'])
+@bp.route('/reservations', methods=['GET'])
 def get_reservations():
     reservations = Reservation.query.order_by(Reservation.date, Reservation.time).all()
     return jsonify([{
@@ -17,7 +18,7 @@ def get_reservations():
         "created_at": r.created_at.isoformat() if r.created_at else None
     } for r in reservations])
 
-@bp.route('/api/reservations', methods=['POST'])
+@bp.route('/reservations', methods=['POST'])
 def create_reservation():
     data = request.get_json()
     
@@ -41,19 +42,3 @@ def create_reservation():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 400
-
-
-@bp.post("/")
-def create_reservation():
-    data = request.get_json()
-    reservation = Reservation(
-        name=data["name"],
-        phone=data["phone"],
-        party_size=data["party_size"],
-        date=data["date"],
-        time=data["time"]
-    )
-    db.session.add(reservation)
-    db.session.commit()
-    return jsonify({"message": "Reservation created"}), 201
-
