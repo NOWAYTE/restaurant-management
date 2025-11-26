@@ -2,10 +2,10 @@ import { NextResponse } from 'next/server';
 
 export async function PATCH(
   request: Request,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = context.params; // Get id from context.params
+    const { id } = params; // Get id from params
     const body = await request.json();
     
     const res = await fetch(`http://localhost:5000/api/menu/${id}`, {
@@ -31,10 +31,10 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = context.params; // Get id from context.params
+    const { id } = params; // Get id from params
     
     const res = await fetch(`http://localhost:5000/api/menu/${id}`, {
       method: 'DELETE',
