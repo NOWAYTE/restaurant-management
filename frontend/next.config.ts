@@ -1,33 +1,35 @@
-const { createProxyMiddleware } = require('http-proxy-middleware');
+import type { NextConfig } from "next";
+import { createProxyMiddleware } from "http-proxy-middleware";
 
-const nextConfig = {
+const nextConfig: NextConfig = {
   async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: 'http://localhost:5000/api/:path*', // Proxy API requests to Flask backend
-      },
-    ];
-  },
-  // For development, we'll use Next.js API routes as a proxy
-  async serverMiddleware() {
-    const { createProxyMiddleware } = await import('http-proxy-middleware');
-    const express = await import('express');
-    const app = express();
-    
-    app.use(
-      '/api',
-      createProxyMiddleware({
-        target: 'http://localhost:5000',
-        changeOrigin: true,
-        pathRewrite: {
-          '^/api': '/api',
+    return {
+      beforeFiles: [
+        // Don't proxy API/auth routes
+        {
+          source: '/api/auth/:path*',
+          destination: '/api/auth/:path*',
         },
-      })
-    );
-    
-    return app;
+        // Proxy other API routes to your backend
+        {
+          source: '/api/:path*',
+          destination: 'http://localhost:5000/api/:path*', // Adjust the port if needed
+        },
+      ],
+    };
+  },
+  async serverMiddleware() {
+    const proxy = createProxyMiddleware({
+      target: 'http://localhost:5000', // Your backend URL
+      changeOrigin: true,
+      pathRewrite: { '^/api': '' }, // Remove /api prefix when forwarding
+      logLevel: 'debug',
+    });
+
+    return {
+      '/api': proxy,
+    };
   },
 };
 
-module.exports = nextConfig;
+export default nextConfig;
