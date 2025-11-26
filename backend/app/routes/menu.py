@@ -70,3 +70,74 @@ def get_menu_item_inventory(item_id):
     } for inv in menu_item.inventory_items]
     
     return jsonify(inventory)
+
+@menu_bp.route("/<int:item_id>", methods=["GET", "PATCH", "DELETE"])
+def manage_menu_item(item_id):
+    if request.method == "PATCH":
+        return update_menu_item(item_id)
+    elif request.method == "DELETE":
+        return delete_menu_item(item_id)
+    elif request.method == "GET":
+        return get_menu_item(item_id)
+
+def update_menu_item(item_id):
+    item = MenuItem.query.get_or_404(item_id)
+    data = request.get_json()
+    
+    # Update fields if they exist in the request
+    if 'name' in data:
+        item.name = data['name']
+    if 'description' in data:
+        item.description = data['description']
+    if 'price' in data:
+        item.price = float(data['price'])
+    if 'category' in data:
+        item.category = data['category']
+    if 'image_url' in data:
+        item.image_url = data['image_url']
+    if 'is_available' in data:
+        item.is_available = bool(data['is_available'])
+    
+    item.updated_at = datetime.utcnow()
+    
+    try:
+        db.session.commit()
+        return jsonify({
+            'id': item.id,
+            'name': item.name,
+            'description': item.description,
+            'price': item.price,
+            'category': item.category,
+            'image_url': item.image_url,
+            'is_available': item.is_available,
+            'created_at': item.created_at.isoformat(),
+            'updated_at': item.updated_at.isoformat() if item.updated_at else None
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+def delete_menu_item(item_id):
+    item = MenuItem.query.get_or_404(item_id)
+    
+    try:
+        db.session.delete(item)
+        db.session.commit()
+        return '', 204
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+def get_menu_item(item_id):
+    item = MenuItem.query.get_or_404(item_id)
+    return jsonify({
+        'id': item.id,
+        'name': item.name,
+        'description': item.description,
+        'price': item.price,
+        'category': item.category,
+        'image_url': item.image_url,
+        'is_available': item.is_available,
+        'created_at': item.created_at.isoformat(),
+        'updated_at': item.updated_at.isoformat() if item.updated_at else None
+    }), 200
