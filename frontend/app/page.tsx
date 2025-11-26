@@ -11,24 +11,6 @@ export default function LandingPage() {
           "url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1950&q=80')",
       }}
     >
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-white/70"></div>
-
-      {/* Navbar */}
-      <nav className="relative z-10 flex justify-between items-center px-8 py-4 max-w-7xl mx-auto">
-        <div className="text-2xl font-bold text-gray-800">RestroManage</div>
-        <div className="space-x-6">
-          <Link href="#features" className="text-gray-700 hover:text-gray-900">
-            Features
-          </Link>
-          <Link href="#pricing" className="text-gray-700 hover:text-gray-900">
-            Pricing
-          </Link>
-          <Link href="#contact" className="text-gray-700 hover:text-gray-900">
-            Contact
-          </Link>
-        </div>
-      </nav>
 
       {/* Hero Section */}
       <section className="relative z-10 flex flex-col items-center justify-center text-center px-4 pt-32 pb-16">
