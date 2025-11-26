@@ -22,7 +22,7 @@ export default function AdminReservations() {
     useEffect(() => {
         const fetchReservations = async () => {
             try {
-                const response = await fetch("/api/reservations");
+                const response = await fetch("http://localhost:5000/api/reservations");
                 if (!response.ok) throw new Error("Failed to fetch reservations");
                 const data = await response.json();
                 setReservations(data);
