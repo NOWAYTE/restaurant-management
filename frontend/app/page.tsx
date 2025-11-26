@@ -14,10 +14,10 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="relative z-10 flex flex-col items-center justify-center text-center px-4 pt-32 pb-16">
-        <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+        <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
           Streamline Your Restaurant Operations
         </h1>
-        <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-2xl">
+        <p className="text-lg md:text-xl text-gray-200 mb-8 max-w-2xl">
           Manage your restaurant effortlessly with our Admin and Kitchen Portals.
         </p>
 
