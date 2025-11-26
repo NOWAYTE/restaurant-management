@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
-    
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
+    const { id } = context.params; // Get id from context.params
     const body = await request.json();
-    const res = await fetch(`http://localhost:5000/api/menu/${params.id}`, {
+    
+    const res = await fetch(`http://localhost:5000/api/menu/${id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -16,7 +17,8 @@ export async function PATCH(
     });
 
     if (!res.ok) {
-      throw new Error('Failed to update menu item');
+      const error = await res.text();
+      throw new Error(error || 'Failed to update menu item');
     }
 
     const data = await res.json();
@@ -29,24 +31,21 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    const session = await auth();
-    if (!session || session.user.role !== 'admin') {
-      return new NextResponse('Unauthorized', { status: 401 });
-    }
-
-    const res = await fetch(`http://localhost:5000/api/menu/${params.id}`, {
+    const { id } = context.params; // Get id from context.params
+    
+    const res = await fetch(`http://localhost:5000/api/menu/${id}`, {
       method: 'DELETE',
       headers: {
-        
         'Content-Type': 'application/json'
       }
     });
 
     if (!res.ok) {
-      throw new Error('Failed to delete menu item');
+      const error = await res.text();
+      throw new Error(error || 'Failed to delete menu item');
     }
 
     return new NextResponse(null, { status: 204 });
