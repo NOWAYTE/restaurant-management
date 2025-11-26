@@ -7,8 +7,8 @@ export async function PATCH(
   try {
     const { id } = params; // Get id from params
     const body = await request.json();
-    
-    const res = await fetch(`http://localhost:5000/api/menu/${id}`, {
+
+    const res = await fetch(`http://localhost:5000/api/menu/${params.id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -35,8 +35,8 @@ export async function DELETE(
 ) {
   try {
     const { id } = params; // Get id from params
-    
-    const res = await fetch(`http://localhost:5000/api/menu/${id}`, {
+
+    const res = await fetch(`http://localhost:5000/api/menu/${params.id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json'
