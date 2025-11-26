@@ -63,7 +63,7 @@ export default function CustomerMenu() {
 
   return (
     <div className="container mx-auto px-4 py-12 items-center justify-center">
-      <h1 className="text-3xl md:text-4xl font-bold mb-10 text-gray-900 text-left">Our Menu</h1>
+      <h1 className="text-xl md:text-xl font-semibold mb-10 text-gray-900 text-left">Our Menu</h1>
       {menuItems.length === 0 ? (
         <p className="text-gray-600 text-center">No menu items available.</p>
       ) : (

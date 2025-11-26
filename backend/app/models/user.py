@@ -16,7 +16,7 @@ class User(db.Model):
     
     # Relationships
     orders = db.relationship('Order', back_populates='customer', lazy=True)
-    reservations = db.relationship('Reservation', back_populates='customer', lazy=True)
+    # Removed reservations relationship as user_id is now optional in reservations
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
