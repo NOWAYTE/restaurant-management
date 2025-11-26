@@ -1,6 +1,6 @@
 # backend/app/routes/menu.py
 from flask import Blueprint, request, jsonify
-from app.models import MenuItem, db
+from app.models import MenuItem, db, OrderItem
 from datetime import datetime
 
 menu_bp = Blueprint("menu", __name__)
@@ -110,7 +110,7 @@ def update_menu_item(item_id):
             'category': item.category,
             'image_url': item.image_url,
             'is_available': item.is_available,
-            'created_at': item.created_at.isoformat(),
+            'created_at': item.created_at.isoformat() if item.created_at else None,
             'updated_at': item.updated_at.isoformat() if item.updated_at else None
         }), 200
     except Exception as e:
@@ -118,17 +118,40 @@ def update_menu_item(item_id):
         return jsonify({'error': str(e)}), 500
 
 def delete_menu_item(item_id):
-    item = MenuItem.query.get_or_404(item_id)
-    
     try:
+        # First, find and delete related order items
+        related_order_items = OrderItem.query.filter_by(menu_item_id=item_id).all()
+        
+        for order_item in related_order_items:
+            db.session.delete(order_item)
+        
+        # Then delete the menu item
+        item = MenuItem.query.get_or_404(item_id)
         db.session.delete(item)
         db.session.commit()
+        
         return '', 204
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+
 def get_menu_item(item_id):
+    try:
+        item = MenuItem.query.get_or_404(item_id)
+        return jsonify({
+            'id': item.id,
+            'name': item.name,
+            'description': item.description,
+            'price': item.price,
+            'category': item.category,
+            'image_url': item.image_url,
+            'is_available': item.is_available,
+            'created_at': item.created_at.isoformat() if item.created_at else None,
+            'updated_at': item.updated_at.isoformat() if item.updated_at else None
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
     item = MenuItem.query.get_or_404(item_id)
     return jsonify({
         'id': item.id,
