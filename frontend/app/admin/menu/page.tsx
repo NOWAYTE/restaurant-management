@@ -131,23 +131,35 @@ const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   setError('');
 
-  const url = editingId ? `/api/menu/${editingId}` : '/api/menu';
+  const baseUrl = '/api/menu';
+  const url = editingId ? `${baseUrl}/${editingId}` : baseUrl;
   const method = editingId ? 'PATCH' : 'POST';
 
   try {
+    // Prepare the request body
+    const requestBody = {
+      ...formData,
+      price: parseFloat(formData.price),
+      // Ensure boolean values are properly sent as booleans, not strings
+      is_available: Boolean(formData.is_available)
+    };
+
+    console.log('Sending request to:', url);
+    console.log('Request body:', requestBody);
+
     const response = await fetch(url, {
       method,
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        ...formData,
-        price: parseFloat(formData.price)
-      }),
+      body: JSON.stringify(requestBody),
     });
 
+    const responseData = await response.json().catch(() => ({}));
+    
     if (!response.ok) {
-      throw new Error(editingId ? 'Failed to update menu item' : 'Failed to add menu item');
+      console.error('Request failed with status:', response.status, 'Response:', responseData);
+      throw new Error(responseData.message || (editingId ? 'Failed to update menu item' : 'Failed to add menu item'));
     }
 
     await fetchMenuItems();
