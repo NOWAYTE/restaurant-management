@@ -15,13 +15,13 @@ export default function Navigation() {
 
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
   const loading = status === 'loading';
-
   if (loading) return null;
 
   const linkClasses = (active: boolean) =>
-    `inline-flex items-center px-3 pt-2 border-b-2 text-sm font-medium transition ${active
-      ? 'border-blue-600 text-gray-900'
-      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+    `inline-flex items-center px-3 pt-2 border-b-2 text-sm font-medium transition ${
+      active
+        ? 'border-blue-600 text-gray-900'
+        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
     }`;
 
   return (
@@ -33,9 +33,13 @@ export default function Navigation() {
             RestroManage
           </Link>
 
-          {/* Main Links */}
-          <div className="hidden sm:flex items-center space-x-8">
-            <div className="flex space-x-6">
+          {/* Right Side: Menu, Cart, Booking, Auth */}
+          <div className="flex items-center space-x-6">
+            {/* Menu Links */}
+            <div className="flex items-center space-x-4">
+              <Link href="/menu" className={linkClasses(pathname === '/menu')}>
+                Menu
+              </Link>
               {session && (session.user?.user?.role === 'admin' || session.user?.user?.role === 'kitchen') && (
                 <Link href="/kitchen" className={linkClasses(pathname === '/kitchen')}>
                   Kitchen
@@ -46,21 +50,19 @@ export default function Navigation() {
                   Admin
                 </Link>
               )}
-              <Link href="/menu" className={linkClasses(pathname === '/menu')}>
-                Menu
-              </Link>
             </div>
+
+            {/* Divider */}
             <div className="h-6 w-px bg-gray-300"></div>
+
+            {/* Book a Table */}
             <Link
               href="/reservations"
               className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg transition-colors duration-200"
             >
               Book a Table
             </Link>
-          </div>
 
-          {/* Right Side */}
-          <div className="flex items-center space-x-4">
             {/* Cart */}
             <div className="relative">
               <button
@@ -145,3 +147,4 @@ export default function Navigation() {
     </nav>
   );
 }
+
