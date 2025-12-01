@@ -48,14 +48,8 @@ export default function AdminReviewsPage() {
       });
 
       if (!response.ok) {
-        if (response.status === 401) {
-          setError('Unauthorized - Please log in again');
-          router.push('/login');
-          return;
-        }
         throw new Error('Failed to fetch reviews');
       }
-
       const data = await response.json();
       setReviews(data);
       setError(null);
