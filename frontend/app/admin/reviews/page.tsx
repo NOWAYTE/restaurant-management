@@ -32,15 +32,17 @@ export default function AdminReviewsPage() {
       fetchReviews();
     }
   }, [status, router]);
-
   const fetchReviews = async () => {
   try {
-    // Add ?status=pending to fetch only pending reviews
-    const response = await fetch('/api/reviews?status=pending');
+    // Use the full backend URL
+    const response = await fetch('http://localhost:5000/api/reviews?status=pending');
+    
     if (!response.ok) {
       throw new Error('Failed to fetch reviews');
     }
+    
     const data = await response.json();
+    console.log('Fetched reviews:', data); // Debug log
     setReviews(data);
     setError(null);
   } catch (error) {
@@ -51,7 +53,6 @@ export default function AdminReviewsPage() {
     setLoading(false);
   }
 };
-
   const updateReviewStatus = async (id: number, status: 'approved' | 'rejected') => {
     try {
       setUpdating(id);
