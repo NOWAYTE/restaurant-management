@@ -1,8 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Check, X, Star, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 type Review = {
   id: number;
@@ -15,21 +18,51 @@ type Review = {
 };
 
 export default function AdminReviewsPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchReviews();
-  }, []);
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    } else if (status === 'authenticated') {
+      fetchReviews();
+    }
+  }, [status, router]);
 
   const fetchReviews = async () => {
+    if (!session?.user) {
+      setError('You must be logged in to view reviews');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const response = await fetch('/api/reviews');
+      const response = await fetch('/api/reviews', {
+        headers: {
+          'Authorization': `Bearer ${session.user.accessToken}`
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          setError('Unauthorized - Please log in again');
+          router.push('/login');
+          return;
+        }
+        throw new Error('Failed to fetch reviews');
+      }
+
       const data = await response.json();
       setReviews(data);
+      setError(null);
     } catch (error) {
       console.error('Error fetching reviews:', error);
+      setError('Failed to load reviews. Please try again.');
+      toast.error('Failed to load reviews');
     } finally {
       setLoading(false);
     }
@@ -42,15 +75,20 @@ export default function AdminReviewsPage() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.user.accessToken}`
         },
         body: JSON.stringify({ status }),
       });
       
       if (response.ok) {
         fetchReviews(); // Refresh the list
+      } else {
+        throw new Error('Failed to update review');
       }
     } catch (error) {
       console.error('Error updating review:', error);
+      setError('Failed to update review. Please try again.');
+      toast.error('Failed to update review');
     } finally {
       setUpdating(null);
     }
@@ -60,6 +98,17 @@ export default function AdminReviewsPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto py-8">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">Error: </strong>
+          <span className="block sm:inline">{error}</span>
+        </div>
       </div>
     );
   }
