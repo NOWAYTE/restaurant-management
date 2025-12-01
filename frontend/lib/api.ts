@@ -104,4 +104,43 @@ export const updateOrderStatus = async (orderId: number, status: string) => {
   return response.data;
 };
 
+// Reviews API
+export const getReviews = async (params?: { status?: string; user_id?: number; order_id?: number; min_rating?: number }) => {
+  const response = await api.get('/reviews', { params });
+  return response.data;
+};
+
+export const getReview = async (id: number) => {
+  const response = await api.get(`/reviews/${id}`);
+  return response.data;
+};
+
+export const createReview = async (reviewData: {
+  user_id: number;
+  order_id?: number;
+  rating: number;
+  comment?: string;
+}) => {
+  const response = await api.post('/reviews', reviewData);
+  return response.data;
+};
+
+export const updateReview = async (id: number, updateData: {
+  status?: 'pending' | 'approved' | 'rejected';
+  admin_comment?: string;
+}) => {
+  const response = await api.patch(`/reviews/${id}`, updateData);
+  return response.data;
+};
+
+export const deleteReview = async (id: number) => {
+  const response = await api.delete(`/reviews/${id}`);
+  return response.data;
+};
+
+export const getReviewStats = async () => {
+  const response = await api.get('/reviews/stats');
+  return response.data;
+};
+
 export default api;

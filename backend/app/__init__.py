@@ -86,7 +86,10 @@ def create_app():
 
     # Register blueprints
     from app.routes.menu import menu_bp
+    from app.routes.reviews import reviews_bp
+    
     app.register_blueprint(menu_bp, url_prefix="/api/menu")
+    app.register_blueprint(reviews_bp, url_prefix="/api/reviews")
 
     return app
 
