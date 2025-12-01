@@ -87,6 +87,38 @@ def get_reviews():
     if min_rating:
         query = query.filter(Review.rating >= min_rating)
     
+    # For admin dashboard, show all reviews regardless of status
+    # Only apply status filter for non-admin users
+    current_user_roles = get_jwt().get('roles', []) if request.headers.get('Authorization') else []
+    is_admin_or_staff = any(role in current_user_roles for role in ['admin', 'staff'])
+    
+    # If no status filter is applied and user is not admin, only show approved reviews
+    if not status and not is_admin_or_staff:
+        query = query.filter(Review.status == 'approved')
+    
+    reviews = query.order_by(Review.created_at.desc()).all()
+    return jsonify([review.to_dict(include_admin_fields=is_admin_or_staff) for review in reviews])
+    # Get query parameters
+    status = request.args.get('status')
+    user_id = request.args.get('user_id', type=int)
+    order_id = request.args.get('order_id', type=int)
+    email = request.args.get('email')  # For searching guest reviews by email
+    min_rating = request.args.get('min_rating', type=int)
+    
+    query = Review.query
+    
+    # Apply filters
+    if status:
+        query = query.filter(Review.status == status)
+    if user_id:
+        query = query.filter(Review.user_id == user_id)
+    if order_id:
+        query = query.filter(Review.order_id == order_id)
+    if email:
+        query = query.filter(Review.guest_email == email)
+    if min_rating:
+        query = query.filter(Review.rating >= min_rating)
+    
     # Only show approved reviews to non-admin users
     current_user_roles = get_jwt().get('roles', []) if request.headers.get('Authorization') else []
     if 'admin' not in current_user_roles and 'staff' not in current_user_roles:
