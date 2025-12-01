@@ -17,12 +17,13 @@ type Review = {
   created_at: string;
 };
 
+// ... (imports remain the same)
+
 export default function AdminReviewsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -32,50 +33,24 @@ export default function AdminReviewsPage() {
       fetchReviews();
     }
   }, [status, router]);
+
   const fetchReviews = async () => {
-  try {
-    // Use the full backend URL
-    const response = await fetch('http://localhost:5000/api/reviews?status=pending');
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch reviews');
-    }
-    
-    const data = await response.json();
-    console.log('Fetched reviews:', data); // Debug log
-    setReviews(data);
-    setError(null);
-  } catch (error) {
-    console.error('Error fetching reviews:', error);
-    setError('Failed to load reviews. Please try again.');
-    toast.error('Failed to load reviews');
-  } finally {
-    setLoading(false);
-  }
-};
-  const updateReviewStatus = async (id: number, status: 'approved' | 'rejected') => {
     try {
-      setUpdating(id);
-      const response = await fetch(`/api/reviews/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.user.accessToken}`
-        },
-        body: JSON.stringify({ status }),
-      });
+      const response = await fetch('http://localhost:5000/api/reviews?status=pending');
       
-      if (response.ok) {
-        fetchReviews(); // Refresh the list
-      } else {
-        throw new Error('Failed to update review');
+      if (!response.ok) {
+        throw new Error('Failed to fetch reviews');
       }
+      
+      const data = await response.json();
+      setReviews(data);
+      setError(null);
     } catch (error) {
-      console.error('Error updating review:', error);
-      setError('Failed to update review. Please try again.');
-      toast.error('Failed to update review');
+      console.error('Error fetching reviews:', error);
+      setError('Failed to load reviews. Please try again.');
+      toast.error('Failed to load reviews');
     } finally {
-      setUpdating(null);
+      setLoading(false);
     }
   };
 
@@ -100,78 +75,34 @@ export default function AdminReviewsPage() {
 
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-2xl font-bold mb-6">Customer Reviews</h1>
+      <h1 className="text-2xl font-bold mb-6">Pending Reviews</h1>
       
       <div className="space-y-4">
         {reviews.length === 0 ? (
-          <p>No reviews found.</p>
+          <p>No pending reviews found.</p>
         ) : (
           reviews.map((review) => (
             <div key={review.id} className="border rounded-lg p-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <div className="flex items-center mb-2">
-                    <div className="flex">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-5 w-5 ${
-                            i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <span className="ml-2 text-sm text-gray-500">
-                      {new Date(review.created_at).toLocaleDateString()}
-                    </span>
+              <div>
+                <div className="flex items-center mb-2">
+                  <div className="flex">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`h-5 w-5 ${
+                          i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                        }`}
+                      />
+                    ))}
                   </div>
-                  <p className="font-medium">{review.user_name || 'Anonymous'}</p>
-                  <p className="text-gray-700 mt-1">{review.comment}</p>
-                </div>
-                
-                {review.status === 'pending' && (
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => updateReviewStatus(review.id, 'approved')}
-                      disabled={updating === review.id}
-                    >
-                      {updating === review.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Check className="h-4 w-4 text-green-500" />
-                      )}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => updateReviewStatus(review.id, 'rejected')}
-                      disabled={updating === review.id}
-                    >
-                      {updating === review.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <X className="h-4 w-4 text-red-500" />
-                      )}
-                    </Button>
-                  </div>
-                )}
-              </div>
-              
-              {review.status !== 'pending' && (
-                <div className="mt-2">
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      review.status === 'approved'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}
-                  >
-                    {review.status}
+                  <span className="ml-2 text-sm text-gray-500">
+                    {new Date(review.created_at).toLocaleDateString()}
                   </span>
                 </div>
-              )}
+                <p className="font-medium">{review.user?.name || 'Anonymous'}</p>
+                <p className="text-gray-700 mt-1">{review.comment}</p>
+                <p className="text-sm text-gray-500 mt-1">{review.user?.email}</p>
+              </div>
             </div>
           ))
         )}
