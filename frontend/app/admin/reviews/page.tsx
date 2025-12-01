@@ -34,33 +34,23 @@ export default function AdminReviewsPage() {
   }, [status, router]);
 
   const fetchReviews = async () => {
-    if (!session?.user) {
-      setError('You must be logged in to view reviews');
-      setLoading(false);
-      return;
+  try {
+    // Add ?status=pending to fetch only pending reviews
+    const response = await fetch('/api/reviews?status=pending');
+    if (!response.ok) {
+      throw new Error('Failed to fetch reviews');
     }
-
-    try {
-      const response = await fetch('/api/reviews', {
-        headers: {
-          'Authorization': `Bearer ${session.user.accessToken}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch reviews');
-      }
-      const data = await response.json();
-      setReviews(data);
-      setError(null);
-    } catch (error) {
-      console.error('Error fetching reviews:', error);
-      setError('Failed to load reviews. Please try again.');
-      toast.error('Failed to load reviews');
-    } finally {
-      setLoading(false);
-    }
-  };
+    const data = await response.json();
+    setReviews(data);
+    setError(null);
+  } catch (error) {
+    console.error('Error fetching reviews:', error);
+    setError('Failed to load reviews. Please try again.');
+    toast.error('Failed to load reviews');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const updateReviewStatus = async (id: number, status: 'approved' | 'rejected') => {
     try {
