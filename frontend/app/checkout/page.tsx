@@ -57,9 +57,9 @@ export default function CheckoutPage() {
         throw new Error(responseData.message || `Failed to place order (Status: ${response.status})`);
       }
 
-      // Clear cart and redirect to success page
+      // Clear cart and redirect to success page with order ID
       clearCart();
-      router.push('/orders/success');
+      router.push(`/orders/success?orderId=${responseData.order_id}`);
     } catch (error) {
       console.error('Error placing order:', error);
       alert(`Failed to place order: ${error.message || 'Please try again.'}`);

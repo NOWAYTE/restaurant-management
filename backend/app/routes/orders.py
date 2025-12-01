@@ -226,10 +226,14 @@ def create_order():
         # Emit WebSocket event
         emit_order_created(order_data)
         
+        # Create a review link with the order ID
+        review_link = f"{request.host_url.rstrip('/')}/reviews?orderId={order.id}"
+        
         return jsonify({
             'message': 'Order created successfully', 
             'order_id': order.id,
-            'order': order_data
+            'order': order_data,
+            'review_link': review_link
         }), 201
     except Exception as e:
         db.session.rollback()

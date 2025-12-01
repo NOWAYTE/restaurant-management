@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Star } from 'lucide-react';
 
 const ReviewPage = () => {
@@ -15,25 +15,35 @@ const ReviewPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const searchParams = useSearchParams();
+  const [orderId, setOrderId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Get order ID from URL parameters if it exists
+    const orderIdParam = searchParams.get('orderId');
+    if (orderIdParam) {
+      setOrderId(orderIdParam);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (rating === 0) {
       setError('Please select a rating');
       return;
     }
-    
+
     if (!name.trim()) {
       setError('Please enter your name');
       return;
     }
-    
+
     if (!email.trim()) {
       setError('Please enter your email');
       return;
     }
-    
+
     // Simple email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
@@ -55,6 +65,7 @@ const ReviewPage = () => {
           name,
           email,
           rating,
+          order_id: orderId || undefined, // Include order ID in the review if available
           comment: comment || undefined, // Send as undefined if empty
         }),
       });
@@ -87,14 +98,19 @@ const ReviewPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Leave a Review</h1>
-        
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Leave a Review</h1>
+        {orderId && (
+          <p className="text-gray-600 mb-4">
+            Reviewing Order: <span className="font-medium">#{orderId}</span>
+          </p>
+        )}
+
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
             <span className="block sm:inline">{error}</span>
           </div>
         )}
-        
+
         {success && (
           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
             <span className="block sm:inline">{success}</span>

@@ -40,6 +40,11 @@ export default function Navigation() {
               Menu
             </Link>
 
+            {/* Reviews Link */}
+            <Link href="/reviews" className={linkClasses(pathname === '/reviews')}>
+              Reviews
+            </Link>
+
             {/* Admin/Kichen Links (only for authorized users) */}
             {session && (session.user?.user?.role === 'admin' || session.user?.user?.role === 'kitchen') && (
               <Link href="/kitchen" className={linkClasses(pathname === '/kitchen')}>
