@@ -7,27 +7,42 @@ from sqlalchemy import func, or_
 reviews_bp = Blueprint('reviews', __name__)
 
 @reviews_bp.route('', methods=['POST'])
-@jwt_required()
 def create_review():
     data = request.get_json()
-    current_user_id = get_jwt_identity()
     
     # Validate required fields
-    if 'rating' not in data or not (1 <= int(data['rating']) <= 5):
+    required_fields = ['rating', 'name', 'email']
+    for field in required_fields:
+        if field not in data or not data[field]:
+            return jsonify({'error': f'{field.capitalize()} is required'}), 400
+            
+    if not (1 <= int(data['rating']) <= 5):
         return jsonify({'error': 'A valid rating between 1 and 5 is required'}), 400
         
-    # Check if user has already reviewed this order (if order_id is provided)
-    if 'order_id' in data and data['order_id']:
-        existing_review = Review.query.filter_by(
-            user_id=current_user_id,
-            order_id=data['order_id']
-        ).first()
-        if existing_review:
-            return jsonify({'error': 'You have already reviewed this order'}), 400
+    # For authenticated users, use their user_id
+    current_user_id = None
+    if 'Authorization' in request.headers:
+        try:
+            from flask_jwt_extended import get_jwt_identity, get_jwt
+            current_user_id = get_jwt_identity()
+            
+            # Check if user has already reviewed this order (if order_id is provided)
+            if 'order_id' in data and data['order_id']:
+                existing_review = Review.query.filter_by(
+                    user_id=current_user_id,
+                    order_id=data['order_id']
+                ).first()
+                if existing_review:
+                    return jsonify({'error': 'You have already reviewed this order'}), 400
+        except:
+            # If JWT is invalid, treat as guest
+            pass
     
     # Create new review
     review = Review(
         user_id=current_user_id,
+        guest_name=data['name'],
+        guest_email=data['email'],
         order_id=data.get('order_id'),
         rating=data['rating'],
         comment=data.get('comment', ''),
@@ -37,10 +52,17 @@ def create_review():
     db.session.add(review)
     db.session.commit()
     
-    # Include admin fields if the requester is an admin/staff
-    current_user_roles = get_jwt().get('roles', [])
-    is_admin_or_staff = any(role in current_user_roles for role in ['admin', 'staff'])
-    return jsonify(review.to_dict(include_admin_fields=is_admin_or_staff)), 201
+    # For guest reviews, don't include admin fields
+    include_admin = False
+    if 'Authorization' in request.headers:
+        try:
+            from flask_jwt_extended import get_jwt
+            current_user_roles = get_jwt().get('roles', [])
+            include_admin = any(role in current_user_roles for role in ['admin', 'staff'])
+        except:
+            pass
+            
+    return jsonify(review.to_dict(include_admin_fields=include_admin)), 201
 
 @reviews_bp.route('', methods=['GET'])
 def get_reviews():
@@ -48,6 +70,7 @@ def get_reviews():
     status = request.args.get('status')
     user_id = request.args.get('user_id', type=int)
     order_id = request.args.get('order_id', type=int)
+    email = request.args.get('email')  # For searching guest reviews by email
     min_rating = request.args.get('min_rating', type=int)
     
     query = Review.query
@@ -59,6 +82,8 @@ def get_reviews():
         query = query.filter(Review.user_id == user_id)
     if order_id:
         query = query.filter(Review.order_id == order_id)
+    if email:
+        query = query.filter(Review.guest_email == email)
     if min_rating:
         query = query.filter(Review.rating >= min_rating)
     

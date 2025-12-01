@@ -8,6 +8,8 @@ import { Star } from 'lucide-react';
 const ReviewPage = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -17,13 +19,25 @@ const ReviewPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!session?.user) {
-      setError('Please log in to submit a review');
-      return;
-    }
-
     if (rating === 0) {
       setError('Please select a rating');
+      return;
+    }
+    
+    if (!name.trim()) {
+      setError('Please enter your name');
+      return;
+    }
+    
+    if (!email.trim()) {
+      setError('Please enter your email');
+      return;
+    }
+    
+    // Simple email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address');
       return;
     }
 
@@ -38,8 +52,10 @@ const ReviewPage = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          name,
+          email,
           rating,
-          comment,
+          comment: comment || undefined, // Send as undefined if empty
         }),
       });
 
@@ -47,9 +63,11 @@ const ReviewPage = () => {
         throw new Error('Failed to submit review');
       }
 
-      setSuccess('Thank you for your review!');
+      setSuccess('Thank you for your review! It will be visible after approval.');
       setRating(0);
       setComment('');
+      setName('');
+      setEmail('');
     } catch (err) {
       setError('Failed to submit review. Please try again.');
       console.error('Error submitting review:', err);
@@ -62,22 +80,6 @@ const ReviewPage = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  if (status === 'unauthenticated') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Please log in to leave a review</h2>
-          <button
-            onClick={() => router.push('/auth/login')}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          >
-            Log In
-          </button>
-        </div>
       </div>
     );
   }
